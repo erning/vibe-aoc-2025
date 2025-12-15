@@ -1,62 +1,90 @@
-//! Day 1: Report Repair
+//! Day 1: Secret Entrance
 //!
-//! ## Problem Description
+//! A safe dial puzzle where we rotate a dial left/right and count positions at 0.
 //!
-//! Part 1: Find two numbers in the expense report that sum to 2020 and return their product.
-//! Part 2: Find three numbers in the expense report that sum to 2020 and return their product.
-//!
-//! ## Solution Approach
-//!
-//! **Input Parsing**: Converts the multiline string input into a vector of integers.
-//!
-//! **Part 1 Strategy**: Uses a brute-force nested loop approach:
-//! - Iterates through all pairs of numbers using two nested loops
-//! - Outer loop: takes each number `a` from the start to second-to-last
-//! - Inner loop: takes each number `b` from current `a` position to end
-//! - Checks if `a + b == 2020`
-//! - Returns `a * b` immediately when found
-//!
-//! **Part 2 Strategy**: Extends the same approach to three numbers:
-//! - Uses three nested loops with similar indexing pattern
-//! - Outer loop: number `a` from start to third-to-last
-//! - Middle loop: number `b` from current `a` position to second-to-last
-//! - Inner loop: number `c` from current `b` position to end
-//! - Checks if `a + b + c == 2020`
-//! - Returns `a * b * c` immediately when found
-//!
-//! **Complexity**: O(n²) for part 1, O(n³) for part 2 where n is the number of entries.
-//! **Optimization Note**: Could be improved with hash sets for O(n) part 1 and O(n²) part 2.
+//! Part 1: Count times dial ends at 0 after a rotation.
+//! Part 2: Count all times dial passes through or lands on 0 during rotations.
 
-fn parse_input(input: &str) -> Vec<i32> {
-    input.trim().lines().map(|s| s.parse().unwrap()).collect()
+fn parse_input(input: &str) -> Vec<(char, i32)> {
+    input
+        .trim()
+        .lines()
+        .map(|line| {
+            let dir = line.chars().next().unwrap();
+            let dist: i32 = line[1..].parse().unwrap();
+            (dir, dist)
+        })
+        .collect()
 }
 
 pub fn part_one(input: &str) -> i32 {
-    let numbers = parse_input(input);
-    let n = numbers.len();
-    for (i, a) in numbers.iter().take(n - 1).enumerate() {
-        for b in numbers.iter().skip(i) {
-            if a + b == 2020 {
-                return a * b;
-            }
+    let rotations = parse_input(input);
+    let mut pos: i32 = 50;
+    let mut count = 0;
+
+    for (dir, dist) in rotations {
+        match dir {
+            'L' => pos = (pos - dist).rem_euclid(100),
+            'R' => pos = (pos + dist).rem_euclid(100),
+            _ => unreachable!(),
+        }
+        if pos == 0 {
+            count += 1;
         }
     }
-    panic!()
+
+    count
 }
 
 pub fn part_two(input: &str) -> i32 {
-    let numbers = parse_input(input);
-    let n = numbers.len();
-    for (i, a) in numbers.iter().enumerate().take(n - 2) {
-        for (j, b) in numbers.iter().enumerate().take(n - 1).skip(i) {
-            for c in numbers.iter().skip(j) {
-                if a + b + c == 2020 {
-                    return a * b * c;
-                }
+    let rotations = parse_input(input);
+    let mut pos: i32 = 50;
+    let mut count = 0;
+
+    for (dir, dist) in rotations {
+        let (new_pos, zeros) = match dir {
+            'L' => {
+                let new_pos = (pos - dist).rem_euclid(100);
+                // Count how many times we click to 0 going left (toward lower numbers)
+                // Going left from pos by dist clicks
+                // If pos > 0, we hit 0 after exactly pos clicks
+                // If pos == 0, first click goes to 99, so we need 100 clicks to return to 0
+                let zeros = if pos == 0 {
+                    // From 0, going left: 0->99->98->...->0 takes 100 clicks
+                    dist / 100
+                } else if dist >= pos {
+                    // We reach 0 after pos clicks, then every 100 more clicks
+                    1 + (dist - pos) / 100
+                } else {
+                    0
+                };
+                (new_pos, zeros)
             }
-        }
+            'R' => {
+                let new_pos = (pos + dist).rem_euclid(100);
+                // Count how many times we click to 0 going right (toward higher numbers)
+                // If pos > 0, we hit 0 after (100 - pos) clicks
+                // If pos == 0, first click goes to 1, so we need 100 clicks to return to 0
+                let zeros = if pos == 0 {
+                    // From 0, going right: 0->1->2->...->0 takes 100 clicks
+                    dist / 100
+                } else {
+                    let clicks_to_zero = 100 - pos;
+                    if dist >= clicks_to_zero {
+                        1 + (dist - clicks_to_zero) / 100
+                    } else {
+                        0
+                    }
+                };
+                (new_pos, zeros)
+            }
+            _ => unreachable!(),
+        };
+        count += zeros;
+        pos = new_pos;
     }
-    panic!()
+
+    count
 }
 
 #[cfg(test)]
@@ -67,7 +95,7 @@ mod tests {
     #[test]
     fn example() {
         let input = read_example(1);
-        assert_eq!(part_one(&input), 514579);
-        assert_eq!(part_two(&input), 241861950);
+        assert_eq!(part_one(&input), 3);
+        assert_eq!(part_two(&input), 6);
     }
 }
