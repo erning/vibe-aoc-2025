@@ -44,3 +44,18 @@ The day06 module SHALL include tests that validate solutions against example dat
 #### Scenario: Tests use example data
 - **WHEN** running `cargo test day06`
 - **THEN** tests pass using inputs/06-example.txt and expected answers
+
+### Requirement: Performance Constraint
+The solution SHALL complete execution within 10 seconds when processing real puzzle input. If execution exceeds this limit, the algorithm MUST be optimized.
+
+#### Scenario: Part One completes within time limit
+- **WHEN** running part_one with real puzzle input
+- **THEN** execution completes in less than 10 seconds
+
+#### Scenario: Part Two completes within time limit
+- **WHEN** running part_two with real puzzle input
+- **THEN** execution completes in less than 10 seconds
+
+#### Scenario: Optimization required for slow solutions
+- **WHEN** either part exceeds 10 seconds execution time
+- **THEN** algorithm must be analyzed and optimized to meet the constraint
