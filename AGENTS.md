@@ -22,18 +22,20 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## Project Overview
 
 
-This is a template project for [Advent of Code xxxx](https://adventofcode.com/xxxx/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
+This is a project for [Advent of Code 2025](https://adventofcode.com/2025/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
 
-- Puzzle page: `https://adventofcode.com/xxxx/day/${N}`
-- Input download: `https://adventofcode.com/xxxx/day/${N}/input` (requires authentication)
+- Puzzle page: `https://adventofcode.com/2025/day/${N}`
+- Input download: `https://adventofcode.com/2025/day/${N}/input` (requires authentication)
 
 ## Architecture
 - **Entry Point**: `src/main.rs` - Main executable with option to run all days or specific ones
 - **Library**: `src/lib.rs` - Re-exports day modules and provides I/O utilities
-- **Day Modules**: `src/day{NN}.rs` - Individual solutions following standardized patterns
+- **Day Modules**: `src/day{NN}.rs` - Individual solutions following standardized patterns (Day 1-12)
+- **Template**: `src/day00.rs` - Reference template module (not registered in puzzle runner)
 - **Inputs**: `inputs/` - Puzzle inputs organized by day
   - `{NN}-example.txt` - Example input from puzzle description
   - `{NN}-input.txt` - Actual puzzle input (requires authentication to download)
+  - `00-*.txt` - Template reference inputs
 
 ## Core Patterns
 Each day module implements:
@@ -123,7 +125,7 @@ To get your session cookie:
 ```
 
 ## Extension Workflow
-1. Create `src/dayXX.rs` following established patterns
+1. Copy `src/day00.rs` to `src/dayNN.rs` (where NN is 01-12)
 2. Add module declaration to `src/lib.rs`
 3. Register in `src/main.rs` puzzles array
 4. Add corresponding input and test files

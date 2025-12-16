@@ -1,6 +1,6 @@
 use std::fs;
 
-pub mod day01;
+pub mod day00;
 
 pub fn read_as_string(day: u8, filename: &str) -> String {
     let filename = format!("inputs/{day:02}-{filename}.txt");

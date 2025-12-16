@@ -1,6 +1,9 @@
-//! Day 1: Report Repair
+//! Day 0: Template Reference
 //!
-//! ## Problem Description
+//! This module serves as a template/reference for creating new day modules.
+//! It is NOT registered in the puzzle runner - copy this file when creating new days.
+//!
+//! ## Problem Description (Example: AoC 2020 Day 1)
 //!
 //! Part 1: Find two numbers in the expense report that sum to 2020 and return their product.
 //! Part 2: Find three numbers in the expense report that sum to 2020 and return their product.
@@ -66,7 +69,7 @@ mod tests {
 
     #[test]
     fn example() {
-        let input = read_example(1);
+        let input = read_example(0);
         assert_eq!(part_one(&input), 514579);
         assert_eq!(part_two(&input), 241861950);
     }
