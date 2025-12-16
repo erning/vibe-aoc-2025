@@ -18,6 +18,7 @@ fn main() {
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
         // puzzle!(day00, "Template Reference"), // day00 is a template
+        puzzle!(day01, "Secret Entrance"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
