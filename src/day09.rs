@@ -208,8 +208,10 @@ fn rectangle_in_polygon(
     for i in 0..n {
         let edge_start = polygon[i];
         let edge_end = polygon[(i + 1) % n];
-        if edge_crosses_rect_interior(edge_start, edge_end, rect_x_min, rect_x_max, rect_y_min, rect_y_max)
-        {
+        if edge_crosses_rect_interior(
+            edge_start, edge_end, rect_x_min, rect_x_max, rect_y_min,
+            rect_y_max,
+        ) {
             return false;
         }
     }
@@ -249,7 +251,9 @@ pub fn part_two(input: &str) -> i64 {
             let rect_y_min = y1.min(y2);
             let rect_y_max = y1.max(y2);
 
-            if rectangle_in_polygon(rect_x_min, rect_x_max, rect_y_min, rect_y_max, &points) {
+            if rectangle_in_polygon(
+                rect_x_min, rect_x_max, rect_y_min, rect_y_max, &points,
+            ) {
                 max_area = area;
             }
         }
