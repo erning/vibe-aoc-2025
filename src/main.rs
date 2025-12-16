@@ -20,6 +20,7 @@ fn main() {
         // puzzle!(day00, "Template Reference"), // day00 is a template
         puzzle!(day01, "Secret Entrance"),
         puzzle!(day02, "Gift Shop"),
+        puzzle!(day03, "Lobby"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
