@@ -52,14 +52,10 @@ cargo fmt      # Code formatting
 
 ## Scripts
 
-### Download Puzzle Input
+### Set up AoC session
+
+choose one method:
 ```bash
-# Download input for a specific day (requires authentication)
-./scripts/download-input.sh 5
-
-# Download today's input
-./scripts/download-input.sh
-
 # Set up authentication (choose one method):
 # Method 1: Environment variable
 export AOC_SESSION="your_session_cookie_here"
@@ -75,6 +71,28 @@ To get your session cookie:
 1. Login to https://adventofcode.com via GitHub
 2. Open browser DevTools (F12) → Application → Cookies
 3. Copy the value of 'session' cookie
+
+### Fetch Puzzle Description
+
+```bash
+# Fetch puzzle description for a specific day
+./scripts/fetch-puzzle.sh 5
+
+# Fetch today's puzzle
+./scripts/fetch-puzzle.sh
+
+# Saves to inputs/05-puzzle.html
+# Note: Part 2 description is only available after completing Part 1
+```
+
+### Download Puzzle Input
+```bash
+# Download input for a specific day (requires authentication)
+./scripts/download-input.sh 5
+
+# Download today's input
+./scripts/download-input.sh
+```
 
 ### Submit Answer
 ```bash
@@ -96,4 +114,3 @@ To get your session cookie:
 - Follows `.rustfmt.toml` formatting rules
 - Includes algorithm explanation comments
 - Tests validate against provided examples
-
