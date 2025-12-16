@@ -13,11 +13,16 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 ## Tech Stack
 - **Language**: Rust (2021 edition)
 - **Build Tool**: Cargo
-- **Code Formatter**: rustfmt (max_width = 78)
+- **Package Name**: `aoc-xxxx-in-rust` (library: `aoc`, binary: `aoc`)
+- **Code Formatter**: rustfmt (max_width = 78, configured in `.rustfmt.toml`)
 - **Linter**: Clippy
-- **Testing Framework**: Built-in Rust test framework
-- **Shell Scripts**: Bash for automation (fetching puzzles, downloading inputs, submitting answers)
+- **Testing Framework**: Built-in Rust test framework (`#[cfg(test)]` modules)
+- **Shell Scripts**: Bash for automation (`scripts/` directory)
+  - `fetch-puzzle.sh` - Download puzzle descriptions as HTML
+  - `download-input.sh` - Download puzzle inputs (requires auth)
+  - `submit-answer.sh` - Submit answers to AoC
 - **External API**: Advent of Code website (adventofcode.com)
+- **External Dependencies**: None (standard library only)
 
 ## Project Conventions
 
@@ -38,10 +43,15 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
   - Private `parse_input()` - converts string input to structured data
   - Public `part_one()` - solves part 1 of the puzzle
   - Public `part_two()` - solves part 2 of the puzzle
-- **Registry Pattern**: Main executable maintains a vector of puzzle solvers in `src/main.rs`
-- **I/O Abstraction**: Helper functions in `src/lib.rs` for reading inputs
+- **Registry Pattern**: Main executable maintains a vector of puzzle solvers using `puzzle!` macro in `src/main.rs`
+- **I/O Abstraction**: Helper functions in `src/lib.rs`:
+  - `read_input(day)` - reads `inputs/NN-input.txt`
+  - `read_example(day)` - reads `inputs/NN-example.txt`
+  - `read_as_string(day, filename)` - reads custom input file
 - **Flexibility**: Support for both example and real inputs via command-line flags
-- **Timing**: Optional execution timing with `--time` flag
+  - `--example` - use example inputs instead of real inputs
+  - `--time` - display execution timing for each part
+  - Positional args - run specific days (e.g., `cargo run --release -- 1 5 10`)
 
 ### Testing Strategy
 - **Test Location**: Tests embedded in each day module with `#[cfg(test)]`
@@ -51,13 +61,14 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 - **Coverage**: Each day's solution must pass its example tests before submission
 
 ### Git Workflow
-- **Branching**: Direct commits to main branch (simple workflow for personal project)
-- **Commit Style**: Clear, descriptive commit messages
+- **Default Branch**: `master`
+- **Feature Branches**: Used for development (e.g., `openspec`)
+- **Commit Style**: Clear, lowercase, descriptive commit messages
 - **Examples**:
   - "Initial commit"
   - "add a script to fetch puzzle"
+  - "introduce openspec (claude, factory)"
 - **Hooks**: No pre-commit hooks configured
-- **PRs**: Main branch used for pull requests
 
 ## Domain Context
 
@@ -93,11 +104,12 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 ## External Dependencies
 - **Advent of Code API**:
   - Base URL: `https://adventofcode.com/2025/day/{day}`
-  - Puzzle descriptions: HTML format
-  - Input download: Text format (requires session cookie)
+  - Puzzle descriptions: HTML format (saved to `inputs/NN-puzzle.html`)
+  - Input download: Text format (requires session cookie, saved to `inputs/NN-input.txt`)
   - Answer submission: Form POST with validation response
-- **Session Management**:
-  - Token can be set via `AOC_SESSION` environment variable
-  - Or stored in `.aoc-session` file (project or home directory)
+- **Session Management** (required for input download and submission):
+  - `AOC_SESSION` environment variable, OR
+  - `.aoc-session` file in project directory, OR
+  - `~/.aoc-session` file in home directory
   - Obtained from browser cookies after GitHub authentication
-- **No External Libraries**: Project uses only Rust standard library (no external crates)
+- **Rust Crates**: None - project uses only Rust standard library
