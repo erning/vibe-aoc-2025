@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::time::SystemTime;
 
 fn main() {
+    #[allow(unused_macros)]
     macro_rules! puzzle {
         ($mod:ident, $title:expr) => {
             (
@@ -17,7 +18,7 @@ fn main() {
 
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
-        puzzle!(day01, "Historian Hysteria"),
+        // puzzle!(day00, "Template/Reference"), // Template - not an actual puzzle
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
