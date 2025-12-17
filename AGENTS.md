@@ -22,16 +22,16 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## Project Overview
 
 
-This is a template project for [Advent of Code xxxx](https://adventofcode.com/xxxx/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
+This is a template project for [Advent of Code 2025](https://adventofcode.com/2025/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
 
-- Puzzle page: `https://adventofcode.com/xxxx/day/${N}`
-- Input download: `https://adventofcode.com/xxxx/day/${N}/input` (requires authentication)
+- Puzzle page: `https://adventofcode.com/2025/day/${N}`
+- Input download: `https://adventofcode.com/2025/day/${N}/input` (requires authentication)
 
 ## Architecture
 - **Entry Point**: `src/main.rs` - Main executable with option to run all days or specific ones
 - **Library**: `src/lib.rs` - Re-exports day modules and provides I/O utilities
-- **Day Modules**: `src/day{NN}.rs` - Individual solutions following standardized patterns
-- **Inputs**: `inputs/` - Puzzle inputs organized by day
+- **Day Modules**: `src/day{NN}.rs` - Individual solutions following standardized patterns (Day 1-12, day00 is template reference)
+- **Inputs**: `inputs/` - Puzzle inputs organized by day (12 puzzles total)
   - `{NN}-example.txt` - Example input from puzzle description
   - `{NN}-input.txt` - Actual puzzle input (requires authentication to download)
 

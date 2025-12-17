@@ -1,6 +1,14 @@
-//! Day 1: Report Repair
+//! Day 00: Template Reference (AoC 2020)
 //!
-//! ## Problem Description
+//! This is a reference template module from a previous year (Advent of Code 2020).
+//! It demonstrates the standard patterns used in this project:
+//! - Parse input with `parse_input()` function
+//! - Implement `part_one()` and `part_two()` public functions
+//! - Include tests using `read_example()` helper
+//!
+//! For new days, follow this structure and replace the problem-specific logic.
+//!
+//! ## Problem Description (AoC 2020 Day 1: Report Repair)
 //!
 //! Part 1: Find two numbers in the expense report that sum to 2020 and return their product.
 //! Part 2: Find three numbers in the expense report that sum to 2020 and return their product.
@@ -66,7 +74,7 @@ mod tests {
 
     #[test]
     fn example() {
-        let input = read_example(1);
+        let input = read_example(0);
         assert_eq!(part_one(&input), 514579);
         assert_eq!(part_two(&input), 241861950);
     }
