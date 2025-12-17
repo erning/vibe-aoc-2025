@@ -3,21 +3,10 @@ use std::fmt::Display;
 use std::time::SystemTime;
 
 fn main() {
-    macro_rules! puzzle {
-        ($mod:ident, $title:expr) => {
-            (
-                $title,
-                |input| Box::new(aoc::$mod::part_one(input)),
-                |input| Box::new(aoc::$mod::part_two(input)),
-            )
-        };
-    }
-
     type SolverFn = fn(&str) -> Box<dyn Display>;
 
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
-        puzzle!(day01, "Historian Hysteria"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
