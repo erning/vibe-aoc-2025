@@ -16,10 +16,8 @@ fn main() {
 
     type SolverFn = fn(&str) -> Box<dyn Display>;
 
-    let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
-        // register puzzle here
-        // puzzle!(day00, "Template Reference"),
-    ];
+    let puzzles: Vec<(&str, SolverFn, SolverFn)> =
+        vec![puzzle!(day01, "Secret Entrance")];
 
     let filename = match env::args().find(|a| a == "--example") {
         None => "input",
