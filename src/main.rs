@@ -23,6 +23,7 @@ fn main() {
         puzzle!(day03, "Lobby"),
         puzzle!(day04, "Printing Department"),
         puzzle!(day05, "Cafeteria"),
+        puzzle!(day06, "Trash Compactor"),
         // puzzle!(day00, "Template/Reference"), // Template - not an actual puzzle
     ];
 
