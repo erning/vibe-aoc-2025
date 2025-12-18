@@ -61,20 +61,15 @@ fn simulate_beams(grid: &[Vec<char>]) -> usize {
     let cols = grid[0].len();
     let start_pos = find_start(grid);
 
-    // Queue of beam positions (row, col) - beams start just below S
+    // Queue of beam starting positions
     let mut beam_queue = VecDeque::new();
-    beam_queue.push_back((start_pos.0 + 1, start_pos.1));
+    beam_queue.push_back((start_pos.0, start_pos.1));
 
     let mut total_splits = 0;
-    let mut visited_beams = HashSet::new();
+    let mut processed_positions = HashSet::new();
 
     while let Some((row, col)) = beam_queue.pop_front() {
-        // Skip if already processed this beam position
-        if !visited_beams.insert((row, col)) {
-            continue;
-        }
-
-        // Move beam downward from current position
+        // Move beam downward from this starting position
         let current_col = col;
         let mut current_row = row;
 
@@ -85,20 +80,34 @@ fn simulate_beams(grid: &[Vec<char>]) -> usize {
             }
 
             match grid[current_row][current_col] {
-                '.' => {
-                    current_row += 1; // Continue moving down
-                    continue;
+                '.' | 'S' => {
+                    // Mark this position as processed if not already
+                    if processed_positions.insert((current_row, current_col)) {
+                        // Continue to next position
+                        current_row += 1;
+                        continue;
+                    } else {
+                        // Already processed this position, stop to avoid infinite loop
+                        break;
+                    }
                 }
                 '^' => {
                     // Beam hits a splitter - count the split!
                     total_splits += 1;
 
                     // Create new beams to left and right of splitter
+                    // Only create if those positions haven't been processed yet
                     if current_col > 0 {
-                        beam_queue.push_back((current_row, current_col - 1));
+                        let left_pos = (current_row, current_col - 1);
+                        if !processed_positions.contains(&left_pos) {
+                            beam_queue.push_back(left_pos);
+                        }
                     }
                     if current_col + 1 < cols {
-                        beam_queue.push_back((current_row, current_col + 1));
+                        let right_pos = (current_row, current_col + 1);
+                        if !processed_positions.contains(&right_pos) {
+                            beam_queue.push_back(right_pos);
+                        }
                     }
                     break; // Original beam stops here
                 }
