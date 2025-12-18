@@ -111,11 +111,6 @@ impl UnionFind {
         true
     }
 
-    fn component_size(&mut self, x: usize) -> usize {
-        let root = self.find(x);
-        self.size[root]
-    }
-
     fn all_component_sizes(&mut self) -> Vec<usize> {
         let mut sizes = HashMap::new();
         for i in 0..self.parent.len() {
