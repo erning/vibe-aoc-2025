@@ -40,10 +40,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
-    input
-        .lines()
-        .map(|line| line.chars().collect())
-        .collect()
+    input.lines().map(|line| line.chars().collect()).collect()
 }
 
 /// Find the starting position 'S'
@@ -121,19 +118,26 @@ fn count_timelines(grid: &[Vec<char>]) -> usize {
 
     // Use memoization to avoid recomputing the same subproblems
     let mut memo = HashMap::new();
-    
+
     // Count all possible paths starting from S position
-    count_paths_from_position_with_memo(grid, start_pos.0, start_pos.1, rows, cols, &mut memo)
+    count_paths_from_position_with_memo(
+        grid,
+        start_pos.0,
+        start_pos.1,
+        rows,
+        cols,
+        &mut memo,
+    )
 }
 
 /// Recursive function with memoization to count paths from a given position
 fn count_paths_from_position_with_memo(
-    grid: &[Vec<char>], 
-    row: usize, 
-    col: usize, 
-    rows: usize, 
+    grid: &[Vec<char>],
+    row: usize,
+    col: usize,
+    rows: usize,
     cols: usize,
-    memo: &mut HashMap<(usize, usize), usize>
+    memo: &mut HashMap<(usize, usize), usize>,
 ) -> usize {
     // Check bounds
     if row >= rows {
@@ -154,26 +158,54 @@ fn count_paths_from_position_with_memo(
     let result = match grid[row][col] {
         'S' => {
             // Starting position - move down
-            count_paths_from_position_with_memo(grid, row + 1, col, rows, cols, memo)
+            count_paths_from_position_with_memo(
+                grid,
+                row + 1,
+                col,
+                rows,
+                cols,
+                memo,
+            )
         }
         '.' => {
             // Empty space - continue moving down
-            count_paths_from_position_with_memo(grid, row + 1, col, rows, cols, memo)
+            count_paths_from_position_with_memo(
+                grid,
+                row + 1,
+                col,
+                rows,
+                cols,
+                memo,
+            )
         }
         '^' => {
             // Splitter - particle splits into left and right paths
             let mut total_paths = 0;
-            
+
             // Left path
             if col > 0 {
-                total_paths += count_paths_from_position_with_memo(grid, row, col - 1, rows, cols, memo);
+                total_paths += count_paths_from_position_with_memo(
+                    grid,
+                    row,
+                    col - 1,
+                    rows,
+                    cols,
+                    memo,
+                );
             }
-            
-            // Right path  
+
+            // Right path
             if col + 1 < cols {
-                total_paths += count_paths_from_position_with_memo(grid, row, col + 1, rows, cols, memo);
+                total_paths += count_paths_from_position_with_memo(
+                    grid,
+                    row,
+                    col + 1,
+                    rows,
+                    cols,
+                    memo,
+                );
             }
-            
+
             total_paths
         }
         _ => {
