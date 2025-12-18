@@ -67,6 +67,7 @@ fn solve_problem(
     grid: &[Vec<char>],
     start_col: usize,
     end_col: usize,
+    read_right_to_left: bool,
 ) -> u64 {
     let rows = grid.len();
     let operator_row = rows - 1;
@@ -80,28 +81,35 @@ fn solve_problem(
         }
     }
 
-    // Extract numbers from columns that contain digits
+    // Extract numbers based on reading direction
     let mut numbers = Vec::new();
 
-    // For each column in the range, check if it contains digits
-    for col in start_col..=end_col {
-        let mut has_digits = false;
-        for row in 0..operator_row {
-            if grid[row][col].is_ascii_digit() {
-                has_digits = true;
-                break;
-            }
-        }
-
-        if has_digits {
-            // Extract the number from this column by reading vertically
+    if read_right_to_left {
+        // Part 2: Read vertically from right to left
+        for col in (start_col..=end_col).rev() {
             let mut digits = String::new();
             for row in 0..operator_row {
                 if grid[row][col].is_ascii_digit() {
                     digits.push(grid[row][col]);
                 }
             }
-
+            if !digits.is_empty() {
+                if let Ok(num) = digits.parse::<u64>() {
+                    numbers.push(num);
+                }
+            }
+        }
+    } else {
+        // Part 1: Read horizontally from left to right
+        for row in 0..operator_row {
+            let mut digits = String::new();
+            for col in start_col..=end_col {
+                if grid[row][col].is_ascii_digit() {
+                    digits.push(grid[row][col]);
+                } else if !digits.is_empty() {
+                    break;
+                }
+            }
             if !digits.is_empty() {
                 if let Ok(num) = digits.parse::<u64>() {
                     numbers.push(num);
@@ -128,14 +136,14 @@ pub fn part_one(input: &str) -> u64 {
     for &boundary in &boundaries {
         if boundary > start_col {
             let end_col = boundary - 1;
-            total += solve_problem(&grid, start_col, end_col);
+            total += solve_problem(&grid, start_col, end_col, false);
             start_col = boundary + 1;
         }
     }
 
     // Handle the last problem
     if start_col < grid[0].len() {
-        total += solve_problem(&grid, start_col, grid[0].len() - 1);
+        total += solve_problem(&grid, start_col, grid[0].len() - 1, false);
     }
 
     total
@@ -165,7 +173,7 @@ pub fn part_two(input: &str) -> u64 {
 
     // Process problems in reverse order (right-to-left)
     for &(start_col, end_col) in problem_ranges.iter().rev() {
-        total += solve_problem(&grid, start_col, end_col);
+        total += solve_problem(&grid, start_col, end_col, true);
     }
 
     total
