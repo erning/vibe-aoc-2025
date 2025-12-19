@@ -139,7 +139,7 @@ mod tests {
         assert_eq!(max_twelve_digit_number("987654321111111"), 987654321111);
         assert_eq!(max_twelve_digit_number("811111111111119"), 811111111119);
         assert_eq!(max_twelve_digit_number("234234234234278"), 434234234278);
-        assert_eq!(max_twelve_digit_number("81818191112111211"), 888911112111);
+        assert_eq!(max_twelve_digit_number("818181911112111"), 888911112111);
     }
 
     #[test]
@@ -147,7 +147,7 @@ mod tests {
         let input = "987654321111111
 811111111111119
 234234234234278
-81818191112111211";
+818181911112111";
 
         assert_eq!(part_one(input).to_string(), "357");
         assert_eq!(part_two(input).to_string(), "3121910778619");

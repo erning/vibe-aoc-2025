@@ -124,8 +124,8 @@ mod tests {
             vec!['.', '.', '@', '.'],
         ];
 
-        assert_eq!(count_neighbors(&grid, 0, 2), 4); // Center top @ has 4 neighbors
-        assert_eq!(count_neighbors(&grid, 1, 1), 6); // Center @ has 6 neighbors
+        assert_eq!(count_neighbors(&grid, 0, 2), 3); // Center top @ has 3 neighbors
+        assert_eq!(count_neighbors(&grid, 1, 1), 4); // Center @ has 4 neighbors
     }
 
     #[test]
@@ -134,12 +134,12 @@ mod tests {
 @@@.@.@.@@
 @@@@@.@.@@
 @.@@@@..@.
-@.@@@@.@@
-.@@@@@@@.
+@@.@@@@.@@
+.@@@@@@@.@
 .@.@.@.@@@
 @.@@@.@@@@
 .@@@@@@@@.
-@.@@.@@@.";
+@.@.@@@.@.";
 
         assert_eq!(part_one(input).to_string(), "13");
         assert_eq!(part_two(input).to_string(), "43");

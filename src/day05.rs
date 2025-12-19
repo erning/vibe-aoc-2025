@@ -169,6 +169,7 @@ mod tests {
             Range { start: 3, end: 5 },
             Range { start: 10, end: 14 },
             Range { start: 16, end: 20 },
+            Range { start: 12, end: 18 },
         ];
 
         assert_eq!(count_total_fresh(&ranges), 14);
@@ -182,7 +183,7 @@ mod tests {
             Range { start: 10, end: 12 },
         ];
 
-        assert_eq!(count_total_fresh(&ranges), 9); // 1-7 (7 IDs) + 10-12 (3 IDs)
+        assert_eq!(count_total_fresh(&ranges), 10); // 1-7 (7 IDs) + 10-12 (3 IDs)
     }
 
     #[test]
@@ -190,6 +191,7 @@ mod tests {
         let input = "3-5
 10-14
 16-20
+12-18
 
 1
 5
