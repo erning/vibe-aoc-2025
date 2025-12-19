@@ -17,7 +17,7 @@ fn main() {
 
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
-        puzzle!(day01, "Historian Hysteria"),
+        // puzzle!(day00, "Template Module"),  // Template module - not an actual puzzle
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
@@ -43,10 +43,8 @@ fn main() {
         let t0 = SystemTime::now();
         println!("Part One: {}", part1(input));
         let t1 = SystemTime::now();
-        if filename == "example" && day == 14 {
-            // example of day 14 part two has different input
-            let input = aoc::read_as_string(day as u8, "example-2");
-            let input = input.as_str();
+        if filename == "example" {
+            // example inputs have the same format as real inputs for all puzzles
             println!("Part Two: {}", part2(input));
         } else {
             println!("Part Two: {}", part2(input));

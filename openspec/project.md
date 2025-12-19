@@ -13,7 +13,7 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 ## Tech Stack
 - **Language**: Rust (2021 edition)
 - **Build Tool**: Cargo
-- **Package Name**: `aoc-xxxx-in-rust` (library: `aoc`, binary: `aoc`)
+- **Package Name**: `aoc-2025-in-rust` (library: `aoc`, binary: `aoc`)
 - **Code Formatter**: rustfmt (max_width = 78, configured in `.rustfmt.toml`)
 - **Linter**: Clippy
 - **Testing Framework**: Built-in Rust test framework (`#[cfg(test)]` modules)
@@ -73,6 +73,8 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 ## Domain Context
 
 **Advent of Code**: An annual event releasing daily programming puzzles from December 1-25. Each puzzle has:
+
+For AoC 2025, only the first 12 days have puzzles (December 1-12). Each puzzle has:
 - Two parts (Part 2 unlocks after completing Part 1)
 - Example input with known answers for validation
 - Unique puzzle input per user (requires authentication)

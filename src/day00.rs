@@ -1,31 +1,22 @@
-//! Day 1: Report Repair
+//! Day 00: Template Module
 //!
 //! ## Problem Description
 //!
-//! Part 1: Find two numbers in the expense report that sum to 2020 and return their product.
-//! Part 2: Find three numbers in the expense report that sum to 2020 and return their product.
+//! This is a template/reference module for Advent of Code solutions.
+//! Part 1 and Part 2 are placeholder implementations.
 //!
 //! ## Solution Approach
 //!
 //! **Input Parsing**: Converts the multiline string input into a vector of integers.
 //!
-//! **Part 1 Strategy**: Uses a brute-force nested loop approach:
-//! - Iterates through all pairs of numbers using two nested loops
-//! - Outer loop: takes each number `a` from the start to second-to-last
-//! - Inner loop: takes each number `b` from current `a` position to end
-//! - Checks if `a + b == 2020`
-//! - Returns `a * b` immediately when found
+//! **Template Structure**: This module serves as a template for new day implementations:
+//! - Private `parse_input()` function for input parsing (follow the established pattern)
+//! - Public `part_one()` function returning the solution for part one
+//! - Public `part_two()` function returning the solution for part two
+//! - Tests using `read_example()` against provided examples
 //!
-//! **Part 2 Strategy**: Extends the same approach to three numbers:
-//! - Uses three nested loops with similar indexing pattern
-//! - Outer loop: number `a` from start to third-to-last
-//! - Middle loop: number `b` from current `a` position to second-to-last
-//! - Inner loop: number `c` from current `b` position to end
-//! - Checks if `a + b + c == 2020`
-//! - Returns `a * b * c` immediately when found
-//!
-//! **Complexity**: O(n²) for part 1, O(n³) for part 2 where n is the number of entries.
-//! **Optimization Note**: Could be improved with hash sets for O(n) part 1 and O(n²) part 2.
+//! **Complexity**: Varies depending on the specific day's requirements.
+//! **Note**: This is a template/reference implementation from a previous year (AoC 2020).
 
 fn parse_input(input: &str) -> Vec<i32> {
     input.trim().lines().map(|s| s.parse().unwrap()).collect()
@@ -66,7 +57,9 @@ mod tests {
 
     #[test]
     fn example() {
-        let input = read_example(1);
+        // This is a template module, so example tests are from AoC 2020 Day 1
+        // Replace with appropriate tests for the actual day when implementing
+        let input = read_example(0);
         assert_eq!(part_one(&input), 514579);
         assert_eq!(part_two(&input), 241861950);
     }
