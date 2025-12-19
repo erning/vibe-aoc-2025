@@ -18,6 +18,8 @@ fn main() {
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
         puzzle!(day01, "Secret Entrance"), // Day 1: Secret Entrance
+        puzzle!(day02, "Gift Shop"),       // Day 2: Gift Shop
+        puzzle!(day03, "Lobby"),           // Day 3: Lobby
                                            // puzzle!(day00, "Template Module"),  // Template module - not an actual puzzle
     ];
 
