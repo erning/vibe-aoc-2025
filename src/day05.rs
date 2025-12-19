@@ -36,7 +36,7 @@ pub fn parse_input(input: &str) -> (Vec<Range>, Vec<u64>) {
     let parts: Vec<&str> = input.split("\n\n").collect();
 
     let mut ranges = Vec::new();
-    if let Some(range_section) = parts.get(0) {
+    if let Some(range_section) = parts.first() {
         for line in range_section.lines() {
             if let Some((start_str, end_str)) = line.split_once('-') {
                 if let (Ok(start), Ok(end)) = (start_str.parse::<u64>(), end_str.parse::<u64>()) {

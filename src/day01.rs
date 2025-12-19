@@ -45,9 +45,7 @@ pub fn parse_input(input: &str) -> Vec<Rotation> {
                 return None;
             }
 
-            let Some(first) = line.chars().next() else {
-                return None;
-            };
+            let first = line.chars().next()?;
 
             let direction = match first {
                 'L' => Direction::Left,

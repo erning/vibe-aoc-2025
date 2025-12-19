@@ -81,10 +81,10 @@ fn max_twelve_digit_number(digits: &str) -> u64 {
         // But we need to leave enough digits for the remaining picks
         let max_search_pos = chars.len() - (12 - result.len());
 
-        for i in pos..=max_search_pos {
-            if chars[i] > best_digit {
-                best_digit = chars[i];
-                best_pos = i;
+        for (i, &ch) in chars[pos..=max_search_pos].iter().enumerate() {
+            if ch > best_digit {
+                best_digit = ch;
+                best_pos = pos + i;
                 if best_digit == '9' {
                     break; // Can't do better than 9
                 }
