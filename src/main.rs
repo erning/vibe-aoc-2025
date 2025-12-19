@@ -21,6 +21,7 @@ fn main() {
         puzzle!(day02, "Gift Shop"),       // Day 2: Gift Shop
         puzzle!(day03, "Lobby"),           // Day 3: Lobby
         puzzle!(day04, "Printing Department"), // Day 4: Printing Department
+        puzzle!(day05, "Cafeteria"),       // Day 5: Cafeteria
                                            // puzzle!(day00, "Template Module"),  // Template module - not an actual puzzle
     ];
 
