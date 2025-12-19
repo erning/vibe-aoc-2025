@@ -1,4 +1,4 @@
-# aoc-xxxx-in-rust
+# Advent of Code 2025
 
 ```text
 $ cargo run --release --
