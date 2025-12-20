@@ -2,11 +2,15 @@
 //!
 //! ## Problem Description
 //!
-//! Tachyon beam simulation through a manifold with splitters.
-//! - Part 1: Count how many times the beam splits (encounters `^`)
-//! - Part 2: With quantum splitting (all paths), count distinct end timelines
+//! Tachyon beam splitter simulation - count split events in quantum mode.
+//!
+//! Key insight: when a downward beam hits ^ at (r,c), it creates two new beams:
+//! - Left beam continues downward from (r, c-1)
+//! - Right beam continues downward from (r, c+1)
+//!
+//! The simulation explores all possible paths and counts unique splitting events.
 
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 fn parse_input(input: &str) -> Vec<&str> {
     input.lines().collect()
@@ -14,135 +18,117 @@ fn parse_input(input: &str) -> Vec<&str> {
 
 pub fn part_one(input: &str) -> u64 {
     let grid = parse_input(input);
+    let (start_row, start_col) = find_start(&grid);
 
-    // Find starting position (marked 'S')
-    let mut start_row = 0;
-    let mut start_col = 0;
-    let mut found = false;
+    // Count unique splitter positions that are encountered
+    let mut splitters_hit = HashSet::new();
+    let mut queue = VecDeque::new();
+    queue.push_back((start_row as i32, start_col as i32));
+    let mut visited_start = HashSet::new();
 
-    for (r, line) in grid.iter().enumerate() {
-        for (c, ch) in line.chars().enumerate() {
-            if ch == 'S' {
-                start_row = r;
-                start_col = c;
-                found = true;
-                break;
-            }
-        }
-        if found {
-            break;
-        }
-    }
-
-    // Count splitters directly below S in the same column
-    let mut splits = 0;
-    let mut row = start_row;
-    let col = start_col;
-
-    loop {
-        row += 1; // Move downward
-
-        if row >= grid.len() {
-            break; // Exit manifold
-        }
-
-        let line = grid[row];
-        if col >= line.len() {
-            break;
-        }
-
-        let ch = line.chars().nth(col).unwrap_or('.');
-
-        if ch == '^' {
-            splits += 1;
-            // Continue counting (don't break)
-        }
-    }
-
-    splits
-}
-
-pub fn part_two(input: &str) -> u64 {
-    let grid = parse_input(input);
-
-    // Find starting position (marked 'S')
-    let mut start_row = 0;
-    let mut start_col = 0;
-    let mut found = false;
-
-    for (r, line) in grid.iter().enumerate() {
-        for (c, ch) in line.chars().enumerate() {
-            if ch == 'S' {
-                start_row = r;
-                start_col = c;
-                found = true;
-                break;
-            }
-        }
-        if found {
-            break;
-        }
-    }
-
-    // With quantum splitting, a particle takes both paths at each splitter
-    // Track all possible end positions
-    let mut final_positions = HashSet::new();
-
-    // BFS/DFS through all possible paths
-    let mut queue = vec![(
-        start_row as i32,
-        start_col as i32,
-        0, // Direction: 0=down, 1=left, 2=right
-    )];
-    let mut visited = HashSet::new();
-
-    while let Some((mut r, mut c, dir)) = queue.pop() {
-        let state = (r, c, dir);
-        if visited.contains(&state) {
+    while let Some((mut r, c)) = queue.pop_front() {
+        if visited_start.contains(&(r, c)) {
             continue;
         }
-        visited.insert(state);
+        visited_start.insert((r, c));
 
+        // Trace downward from (r, c)
         loop {
-            // Move in current direction
-            match dir {
-                0 => r += 1, // Down
-                1 => c -= 1, // Left
-                2 => c += 1, // Right
-                _ => break,
-            }
+            // Move down
+            r += 1;
 
-            // Check bounds - if we exit, this is a final position
-            if r < 0 || r >= grid.len() as i32 || c < 0 {
-                final_positions.insert((r, c));
+            // Check bounds
+            if r < 0 || r >= grid.len() as i32 {
                 break;
             }
 
             let r_usize = r as usize;
-            if r_usize >= grid.len() {
-                final_positions.insert((r, c));
-                break;
-            }
-
             let line = grid[r_usize];
-            if c as usize >= line.len() {
-                final_positions.insert((r, c));
+
+            if c < 0 || c as usize >= line.len() {
                 break;
             }
 
             let ch = line.chars().nth(c as usize).unwrap_or('.');
 
             if ch == '^' {
-                // Split: add both left and right paths to queue
-                queue.push((r, c, 1)); // Left
-                queue.push((r, c, 2)); // Right
-                break; // This path splits, so we move to processing the new paths
+                // Record this splitter if we haven't hit it before
+                if !splitters_hit.contains(&(r, c)) {
+                    splitters_hit.insert((r, c));
+                }
+
+                // Queue left and right paths
+                queue.push_back((r, c - 1));
+                queue.push_back((r, c + 1));
+                break;
             }
-            // Continue in same direction for '.' or 'S'
         }
     }
 
-    final_positions.len() as u64
+    splitters_hit.len() as u64
+}
+
+pub fn part_two(input: &str) -> u64 {
+    let grid = parse_input(input);
+    let (start_row, start_col) = find_start(&grid);
+
+    let mut visited = HashSet::new();
+    let mut end_positions = HashSet::new();
+    let mut queue = VecDeque::new();
+    queue.push_back((start_row as i32, start_col as i32));
+
+    while let Some((mut r, c)) = queue.pop_front() {
+        if visited.contains(&(r, c)) {
+            continue;
+        }
+
+        // Trace downward from (r, c)
+        loop {
+            // Move down
+            r += 1;
+
+            // Check bounds
+            if r < 0 || r >= grid.len() as i32 {
+                end_positions.insert((r, c));
+                break;
+            }
+
+            let r_usize = r as usize;
+            let line = grid[r_usize];
+
+            if c < 0 || c as usize >= line.len() {
+                end_positions.insert((r, c));
+                break;
+            }
+
+            if visited.contains(&(r, c)) {
+                break;
+            }
+            visited.insert((r, c));
+
+            let ch = line.chars().nth(c as usize).unwrap_or('.');
+
+            if ch == '^' {
+                // Queue left and right paths
+                queue.push_back((r, c - 1));
+                queue.push_back((r, c + 1));
+                break;
+            }
+        }
+    }
+
+    end_positions.len() as u64
+}
+
+fn find_start(grid: &[&str]) -> (usize, usize) {
+    for (r, line) in grid.iter().enumerate() {
+        for (c, ch) in line.chars().enumerate() {
+            if ch == 'S' {
+                return (r, c);
+            }
+        }
+    }
+    (0, 0)
 }
 
 #[cfg(test)]
