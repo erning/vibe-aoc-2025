@@ -1,5 +1,5 @@
 {
-  description = "Advent of Code xxxx in Rust";
+  description = "Advent of Code 2025 in Rust";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -35,7 +35,7 @@
           ];
 
           shellHook = ''
-            echo "🎄 Advent of Code xxxx - Rust Development Environment"
+            echo "🎄 Advent of Code 2025 - Rust Development Environment"
             echo ""
             echo "Available commands:"
             echo "  cargo build --release          # Build optimized binary"

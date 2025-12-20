@@ -1,4 +1,7 @@
-//! Day 1: Report Repair
+//! Day 0: Template Reference (AoC 2020 Day 1 - Report Repair)
+//!
+//! **NOTE**: This is a template/reference module from AoC 2020 Day 1.
+//! Use this as a pattern when creating new day modules for AoC 2025.
 //!
 //! ## Problem Description
 //!
@@ -66,7 +69,7 @@ mod tests {
 
     #[test]
     fn example() {
-        let input = read_example(1);
+        let input = read_example(0);
         assert_eq!(part_one(&input), 514579);
         assert_eq!(part_two(&input), 241861950);
     }

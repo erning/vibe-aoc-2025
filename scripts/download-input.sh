@@ -10,7 +10,7 @@
 
 set -e
 
-YEAR=xxxx
+YEAR=2025
 DAY=${1:-$(date +%-d)}
 
 # Pad day to 2 digits

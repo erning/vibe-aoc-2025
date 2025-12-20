@@ -13,7 +13,7 @@ This is a **Rust implementation of Advent of Code 2025 puzzles**. The project pr
 ## Tech Stack
 - **Language**: Rust (2021 edition)
 - **Build Tool**: Cargo
-- **Package Name**: `aoc-xxxx-in-rust` (library: `aoc`, binary: `aoc`)
+- **Package Name**: `aoc-2025-in-rust` (library: `aoc`, binary: `aoc`)
 - **Code Formatter**: rustfmt (max_width = 78, configured in `.rustfmt.toml`)
 - **Linter**: Clippy
 - **Testing Framework**: Built-in Rust test framework (`#[cfg(test)]` modules)
