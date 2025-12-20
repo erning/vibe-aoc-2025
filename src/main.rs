@@ -19,6 +19,7 @@ fn main() {
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // Day 0 is a template reference, not part of 2025 event
         // puzzle!(day00, "Template Reference"),
+        puzzle!(day01, "Secret Entrance"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
