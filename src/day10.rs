@@ -2,9 +2,13 @@
 //!
 //! ## Problem Description
 //!
-//! Minimize button presses to configure indicator lights and joltage levels.
-//! - Part 1: Achieve target light pattern (toggle parity)
-//! - Part 2: Achieve target joltage levels (integer equations)
+//! Minimize button presses to configure indicator lights and
+//! joltage levels.
+//! - Part 1: Light toggle puzzle (GF(2) linear equations)
+//! - Part 2: Joltage counter puzzle (integer linear equations)
+
+use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashMap};
 
 #[derive(Debug, Clone)]
 struct Machine {
@@ -14,28 +18,22 @@ struct Machine {
 }
 
 fn parse_line(line: &str) -> Option<Machine> {
-    // Parse format: [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
-
     let mut parts = line.split_whitespace();
 
-    // Parse lights
     let lights_str = parts.next()?;
-    let lights_str = &lights_str[1..lights_str.len() - 1]; // Remove [ ]
+    let lights_str = &lights_str[1..lights_str.len() - 1];
     let lights: Vec<bool> = lights_str.chars().map(|c| c == '#').collect();
 
-    // Parse buttons
     let mut buttons = Vec::new();
     loop {
         let button_str = parts.next()?;
         if button_str.starts_with('{') {
-            // Move to parse joltage
-            let joltage_str =
-                if button_str.starts_with('{') && button_str.ends_with('}') {
-                    button_str
-                } else {
-                    parts.next()?
-                };
-            let joltage_str = &joltage_str[1..joltage_str.len() - 1]; // Remove { }
+            let joltage_str = if button_str.ends_with('}') {
+                button_str.to_string()
+            } else {
+                format!("{} {}", button_str, parts.next().unwrap_or(""))
+            };
+            let joltage_str = &joltage_str[1..joltage_str.len() - 1];
             let joltage: Vec<i64> = joltage_str
                 .split(',')
                 .filter_map(|s| s.trim().parse().ok())
@@ -48,7 +46,7 @@ fn parse_line(line: &str) -> Option<Machine> {
             });
         }
 
-        let button_str = &button_str[1..button_str.len() - 1]; // Remove ( )
+        let button_str = &button_str[1..button_str.len() - 1];
         let button: Vec<usize> = button_str
             .split(',')
             .filter_map(|s| s.trim().parse().ok())
@@ -86,112 +84,102 @@ pub fn part_two(input: &str) -> u64 {
 }
 
 fn solve_lights(target: &[bool], buttons: &[Vec<usize>]) -> u64 {
-    // Use Gaussian elimination modulo 2 to find minimum button presses
-    // This is a system of linear equations over GF(2)
-
     let n_lights = target.len();
     let n_buttons = buttons.len();
 
-    // Build the system: button_effects[i][j] = 1 if button i affects light j
-    let mut effects = vec![vec![0u8; n_lights]; n_buttons];
-    for (b_idx, button) in buttons.iter().enumerate() {
-        for &light_idx in button {
-            if light_idx < n_lights {
-                effects[b_idx][light_idx] = 1;
-            }
-        }
-    }
+    let mut min_presses = u64::MAX;
 
-    // Target state (mod 2)
-    let target_mod2: Vec<u8> =
-        target.iter().map(|&b| if b { 1 } else { 0 }).collect();
+    for mask in 0..(1u64 << n_buttons) {
+        let mut state = vec![false; n_lights];
 
-    // Use greedy approach: try all combinations up to a reasonable limit
-    // For small n_buttons, brute force is viable
-    if n_buttons <= 20 {
-        let mut min_presses = u64::MAX;
-
-        for mask in 0..(1u64 << n_buttons) {
-            let mut state = vec![0u8; n_lights];
-
-            for (b_idx, button) in buttons.iter().enumerate() {
-                let count = ((mask >> b_idx) & 1) as usize;
+        for (b_idx, button) in buttons.iter().enumerate() {
+            if ((mask >> b_idx) & 1) != 0 {
                 for &light_idx in button {
                     if light_idx < n_lights {
-                        state[light_idx] ^= count as u8;
+                        state[light_idx] = !state[light_idx];
                     }
                 }
             }
-
-            if state == target_mod2 {
-                let presses = mask.count_ones() as u64;
-                min_presses = min_presses.min(presses);
-            }
         }
 
-        return if min_presses == u64::MAX {
-            0
-        } else {
-            min_presses
-        };
+        if state == target {
+            let presses = mask.count_ones() as u64;
+            min_presses = min_presses.min(presses);
+        }
     }
 
-    0 // Fallback
+    if min_presses == u64::MAX {
+        0
+    } else {
+        min_presses
+    }
 }
 
 fn solve_joltage(target: &[i64], buttons: &[Vec<usize>]) -> u64 {
-    // Solve the system of linear equations to find minimum total presses
-    // target[i] = sum(presses[j] for j where button j affects counter i)
-
+    // Dijkstra's algorithm with Pareto optimization
+    // State: (current_presses, counter_values)
     let n_counters = target.len();
-    let n_buttons = buttons.len();
 
-    // Build the system: effects[i][j] = 1 if button j affects counter i
-    let mut effects = vec![vec![0i64; n_buttons]; n_counters];
-    for (b_idx, button) in buttons.iter().enumerate() {
-        for &counter_idx in button {
-            if counter_idx < n_counters {
-                effects[counter_idx][b_idx] = 1;
-            }
-        }
+    let initial = vec![0i64; n_counters];
+
+    if initial == target {
+        return 0;
     }
 
-    // Use a greedy/iterative approach: for each counter, determine needed presses
-    // This works if buttons form a triangular or solvable system
-    let mut presses = vec![0i64; n_buttons];
+    let mut heap = BinaryHeap::new();
+    heap.push((Reverse(0u64), initial.clone()));
 
-    // Try to solve greedily
-    for _ in 0..10 {
-        let mut changed = false;
+    let mut visited = HashMap::new();
+    visited.insert(initial, 0u64);
 
-        for counter in 0..n_counters {
-            let mut current = 0i64;
-            for (b_idx, &count) in presses.iter().enumerate() {
-                current += effects[counter][b_idx] * count;
+    while let Some((Reverse(presses), state)) = heap.pop() {
+        if state == target {
+            return presses;
+        }
+
+        if let Some(&prev_presses) = visited.get(&state) {
+            if prev_presses < presses {
+                continue;
             }
+        }
 
-            let deficit = target[counter] - current;
-            if deficit != 0 {
-                // Find a button that affects this counter
-                for (b_idx, &effect) in effects[counter].iter().enumerate() {
-                    if effect != 0 {
-                        let add = deficit / effect;
-                        if add > 0 {
-                            presses[b_idx] += add;
-                            changed = true;
-                            break;
-                        }
-                    }
+        // Try each button
+        for button in buttons {
+            let mut next_state = state.clone();
+
+            for &c_idx in button {
+                if c_idx < n_counters {
+                    next_state[c_idx] += 1;
                 }
             }
-        }
 
-        if !changed {
-            break;
+            // Prune aggressively: skip if we're way over target
+            let mut overshooting = false;
+            for i in 0..n_counters {
+                if next_state[i] > target[i] * 2 {
+                    overshooting = true;
+                    break;
+                }
+            }
+
+            if overshooting {
+                continue;
+            }
+
+            let next_presses = presses + 1;
+
+            let should_visit = visited
+                .get(&next_state)
+                .map_or(true, |&prev| next_presses < prev);
+
+            if should_visit {
+                visited.insert(next_state.clone(), next_presses);
+                heap.push((Reverse(next_presses), next_state));
+            }
         }
     }
 
-    presses.iter().sum::<i64>() as u64
+    0
 }
 
 #[cfg(test)]
