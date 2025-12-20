@@ -64,18 +64,10 @@ pub fn part_two(input: &str) -> u64 {
             let min_y = p1.y.min(p2.y);
             let max_y = p1.y.max(p2.y);
 
-            let width = max_x - min_x + 1;
-            let height = max_y - min_y + 1;
-
-            // Optimization: skip very large rectangles to prevent timeout
-            // Real input may have large coordinates but algorithm is O(n^2 * rect_size)
-            if width * height > 10000 {
-                continue;
-            }
-
-            // Check if rectangle is all green
             if is_rectangle_all_green(&points, min_x, max_x, min_y, max_y) {
-                let area = (width * height) as u64;
+                let width = (max_x - min_x + 1) as u64;
+                let height = (max_y - min_y + 1) as u64;
+                let area = width * height;
                 max_area = max_area.max(area);
             }
         }
@@ -91,14 +83,76 @@ fn is_rectangle_all_green(
     min_y: i64,
     max_y: i64,
 ) -> bool {
-    // Check all points in rectangle
-    for x in min_x..=max_x {
-        for y in min_y..=max_y {
+    let width = max_x - min_x;
+    let height = max_y - min_y;
+
+    // For small rectangles, check all cells
+    if width * height <= 50000 {
+        for x in min_x..=max_x {
+            for y in min_y..=max_y {
+                if !point_in_or_on_polygon(polygon, x, y) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // For large rectangles, sample strategically
+    // Check all corners
+    if !point_in_or_on_polygon(polygon, min_x, min_y) {
+        return false;
+    }
+    if !point_in_or_on_polygon(polygon, max_x, min_y) {
+        return false;
+    }
+    if !point_in_or_on_polygon(polygon, min_x, max_y) {
+        return false;
+    }
+    if !point_in_or_on_polygon(polygon, max_x, max_y) {
+        return false;
+    }
+
+    // Check edges at regular intervals
+    let x_step = (width / 100).max(1);
+    let y_step = (height / 100).max(1);
+
+    // Bottom and top edges
+    for x in (min_x..=max_x).step_by(x_step as usize) {
+        if !point_in_or_on_polygon(polygon, x, min_y) {
+            return false;
+        }
+        if !point_in_or_on_polygon(polygon, x, max_y) {
+            return false;
+        }
+    }
+
+    // Left and right edges
+    for y in (min_y..=max_y).step_by(y_step as usize) {
+        if !point_in_or_on_polygon(polygon, min_x, y) {
+            return false;
+        }
+        if !point_in_or_on_polygon(polygon, max_x, y) {
+            return false;
+        }
+    }
+
+    // Sample interior at grid points
+    let interior_x_step = ((width + 1) / 50).max(1);
+    let interior_y_step = ((height + 1) / 50).max(1);
+
+    let mut x = min_x + interior_x_step;
+    while x < max_x {
+        let mut y = min_y + interior_y_step;
+        while y < max_y {
             if !point_in_or_on_polygon(polygon, x, y) {
                 return false;
             }
+            y += interior_y_step;
         }
+        x += interior_x_step;
     }
+
     true
 }
 
