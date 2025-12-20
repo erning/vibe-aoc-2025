@@ -7,9 +7,6 @@
 //! - Part 1: Light toggle puzzle (GF(2) linear equations)
 //! - Part 2: Joltage counter puzzle (integer linear equations)
 
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashMap};
-
 #[derive(Debug, Clone)]
 struct Machine {
     lights: Vec<bool>,
@@ -116,70 +113,64 @@ fn solve_lights(target: &[bool], buttons: &[Vec<usize>]) -> u64 {
 }
 
 fn solve_joltage(target: &[i64], buttons: &[Vec<usize>]) -> u64 {
-    // Dijkstra's algorithm with Pareto optimization
-    // State: (current_presses, counter_values)
+    // Greedy approach: solve left-to-right using constraint propagation
+    let n_buttons = buttons.len();
     let n_counters = target.len();
 
-    let initial = vec![0i64; n_counters];
+    let mut presses = vec![0i64; n_buttons];
+    let mut current = vec![0i64; n_counters];
 
-    if initial == target {
-        return 0;
-    }
+    // For each counter, if there's only one button affecting it,
+    // we can directly determine that button's count
+    // Otherwise, use greedy selection of best button
 
-    let mut heap = BinaryHeap::new();
-    heap.push((Reverse(0u64), initial.clone()));
+    // Repeat until converged
+    for _ in 0..100 {
+        let mut changed = false;
 
-    let mut visited = HashMap::new();
-    visited.insert(initial, 0u64);
+        // For each counter that isn't satisfied
+        for c in 0..n_counters {
+            if current[c] < target[c] {
+                let deficit = target[c] - current[c];
 
-    while let Some((Reverse(presses), state)) = heap.pop() {
-        if state == target {
-            return presses;
-        }
+                // Find best button to press (covers most unsatisfied counters)
+                let mut best_button = 0;
+                let mut best_coverage = 0;
 
-        if let Some(&prev_presses) = visited.get(&state) {
-            if prev_presses < presses {
-                continue;
-            }
-        }
-
-        // Try each button
-        for button in buttons {
-            let mut next_state = state.clone();
-
-            for &c_idx in button {
-                if c_idx < n_counters {
-                    next_state[c_idx] += 1;
+                for b in 0..n_buttons {
+                    let mut coverage = 0;
+                    for &counter_idx in &buttons[b] {
+                        if counter_idx < n_counters
+                            && current[counter_idx] < target[counter_idx]
+                        {
+                            coverage += 1;
+                        }
+                    }
+                    if coverage > best_coverage {
+                        best_coverage = coverage;
+                        best_button = b;
+                    }
                 }
-            }
 
-            // Prune aggressively: skip if we're way over target
-            let mut overshooting = false;
-            for i in 0..n_counters {
-                if next_state[i] > target[i] * 2 {
-                    overshooting = true;
+                if best_coverage > 0 {
+                    presses[best_button] += deficit;
+                    for &counter_idx in &buttons[best_button] {
+                        if counter_idx < n_counters {
+                            current[counter_idx] += deficit;
+                        }
+                    }
+                    changed = true;
                     break;
                 }
             }
+        }
 
-            if overshooting {
-                continue;
-            }
-
-            let next_presses = presses + 1;
-
-            let should_visit = visited
-                .get(&next_state)
-                .map_or(true, |&prev| next_presses < prev);
-
-            if should_visit {
-                visited.insert(next_state.clone(), next_presses);
-                heap.push((Reverse(next_presses), next_state));
-            }
+        if !changed {
+            break;
         }
     }
 
-    0
+    presses.iter().sum::<i64>() as u64
 }
 
 #[cfg(test)]
