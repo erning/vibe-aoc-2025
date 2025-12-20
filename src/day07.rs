@@ -2,15 +2,16 @@
 //!
 //! ## Problem Description
 //!
-//! Tachyon beam splitter simulation - count split events in quantum mode.
+//! Tachyon beam splitter simulation in quantum mode.
 //!
-//! Key insight: when a downward beam hits ^ at (r,c), it creates two new beams:
-//! - Left beam continues downward from (r, c-1)
-//! - Right beam continues downward from (r, c+1)
+//! - Part 1: Count total number of beam splits (every encounter with ^)
+//! - Part 2: Count distinct timelines (unique paths through the manifold)
 //!
-//! The simulation explores all possible paths and counts unique splitting events.
+//! Key insight: A beam continues downward until it hits a splitter (^),
+//! then creates two branches. In quantum mode, each choice creates a
+//! different timeline.
 
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
 fn parse_input(input: &str) -> Vec<&str> {
     input.lines().collect()
@@ -20,104 +21,121 @@ pub fn part_one(input: &str) -> u64 {
     let grid = parse_input(input);
     let (start_row, start_col) = find_start(&grid);
 
-    // Count unique splitter positions that are encountered
-    let mut splitters_hit = HashSet::new();
-    let mut queue = VecDeque::new();
-    queue.push_back((start_row as i32, start_col as i32));
-    let mut visited_start = HashSet::new();
+    // Count distinct splitter positions encountered
+    let mut splitter_positions = HashSet::new();
+    let mut visited = HashSet::new();
+    count_splitters(
+        &grid,
+        start_row as i32,
+        start_col as i32,
+        &mut visited,
+        &mut splitter_positions,
+    );
 
-    while let Some((mut r, c)) = queue.pop_front() {
-        if visited_start.contains(&(r, c)) {
-            continue;
+    splitter_positions.len() as u64
+}
+
+fn count_splitters(
+    grid: &[&str],
+    start_r: i32,
+    start_c: i32,
+    visited: &mut HashSet<(i32, i32)>,
+    splitter_positions: &mut HashSet<(i32, i32)>,
+) {
+    let mut r = start_r;
+    let c = start_c;
+
+    loop {
+        // Move down
+        r += 1;
+
+        // Check bounds
+        if r < 0 || r >= grid.len() as i32 {
+            return;
         }
-        visited_start.insert((r, c));
 
-        // Trace downward from (r, c)
-        loop {
-            // Move down
-            r += 1;
+        let r_usize = r as usize;
+        let line = grid[r_usize];
 
-            // Check bounds
-            if r < 0 || r >= grid.len() as i32 {
-                break;
-            }
+        if c < 0 || c as usize >= line.len() {
+            return;
+        }
 
-            let r_usize = r as usize;
-            let line = grid[r_usize];
+        // Check visited to prevent infinite loops
+        if visited.contains(&(r, c)) {
+            return;
+        }
+        visited.insert((r, c));
 
-            if c < 0 || c as usize >= line.len() {
-                break;
-            }
+        let ch = line.chars().nth(c as usize).unwrap_or('.');
 
-            let ch = line.chars().nth(c as usize).unwrap_or('.');
-
-            if ch == '^' {
-                // Record this splitter if we haven't hit it before
-                if !splitters_hit.contains(&(r, c)) {
-                    splitters_hit.insert((r, c));
-                }
-
-                // Queue left and right paths
-                queue.push_back((r, c - 1));
-                queue.push_back((r, c + 1));
-                break;
-            }
+        if ch == '^' {
+            // Found a splitter - record it and branch
+            splitter_positions.insert((r, c));
+            count_splitters(grid, r, c - 1, visited, splitter_positions);
+            count_splitters(grid, r, c + 1, visited, splitter_positions);
+            return;
         }
     }
-
-    splitters_hit.len() as u64
 }
 
 pub fn part_two(input: &str) -> u64 {
     let grid = parse_input(input);
     let (start_row, start_col) = find_start(&grid);
 
+    let mut timeline_count = 0u64;
     let mut visited = HashSet::new();
-    let mut end_positions = HashSet::new();
-    let mut queue = VecDeque::new();
-    queue.push_back((start_row as i32, start_col as i32));
+    count_timelines(
+        &grid,
+        start_row as i32,
+        start_col as i32,
+        &mut visited,
+        &mut timeline_count,
+    );
+    timeline_count
+}
 
-    while let Some((mut r, c)) = queue.pop_front() {
-        if visited.contains(&(r, c)) {
-            continue;
+fn count_timelines(
+    grid: &[&str],
+    start_r: i32,
+    start_c: i32,
+    visited: &mut HashSet<(i32, i32)>,
+    timeline_count: &mut u64,
+) {
+    let mut r = start_r;
+    let c = start_c;
+    let mut local_visited = HashSet::new();
+
+    loop {
+        r += 1;
+
+        if r < 0 || r >= grid.len() as i32 {
+            *timeline_count += 1;
+            return;
         }
 
-        // Trace downward from (r, c)
-        loop {
-            // Move down
-            r += 1;
+        let r_usize = r as usize;
+        let line = grid[r_usize];
 
-            // Check bounds
-            if r < 0 || r >= grid.len() as i32 {
-                end_positions.insert((r, c));
-                break;
-            }
+        if c < 0 || c as usize >= line.len() {
+            *timeline_count += 1;
+            return;
+        }
 
-            let r_usize = r as usize;
-            let line = grid[r_usize];
+        if local_visited.contains(&(r, c)) {
+            *timeline_count += 1;
+            return;
+        }
+        local_visited.insert((r, c));
 
-            if c < 0 || c as usize >= line.len() {
-                end_positions.insert((r, c));
-                break;
-            }
+        let ch = line.chars().nth(c as usize).unwrap_or('.');
 
-            if visited.contains(&(r, c)) {
-                break;
-            }
-            visited.insert((r, c));
-
-            let ch = line.chars().nth(c as usize).unwrap_or('.');
-
-            if ch == '^' {
-                // Queue left and right paths
-                queue.push_back((r, c - 1));
-                queue.push_back((r, c + 1));
-                break;
-            }
+        if ch == '^' {
+            count_timelines(grid, r, c - 1, visited, timeline_count);
+            count_timelines(grid, r, c + 1, visited, timeline_count);
+            return;
         }
     }
-
-    end_positions.len() as u64
 }
 
 fn find_start(grid: &[&str]) -> (usize, usize) {
@@ -139,12 +157,12 @@ mod tests {
     #[test]
     fn example_part_one() {
         let input = read_example(7);
-        assert_eq!(part_one(&input), 8);
+        assert_eq!(part_one(&input), 21);
     }
 
     #[test]
     fn example_part_two() {
         let input = read_example(7);
-        assert_eq!(part_two(&input), 16);
+        assert_eq!(part_two(&input), 40);
     }
 }
