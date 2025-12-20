@@ -4,13 +4,14 @@
 //!
 //! Tachyon beam splitter simulation in quantum mode.
 //!
-//! - Part 1: Count total number of beam splits (every encounter with ^)
+//! - Part 1: Count distinct splitter positions encountered
 //! - Part 2: Count distinct timelines (unique paths through the manifold)
 //!
 //! Key insight: A beam continues downward until it hits a splitter (^),
-//! then creates two branches. In quantum mode, each choice creates a
-//! different timeline.
+//! then creates two branches. Each timeline is a unique combination of
+//! left/right choices at each splitter.
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 fn parse_input(input: &str) -> Vec<&str> {
@@ -21,7 +22,6 @@ pub fn part_one(input: &str) -> u64 {
     let grid = parse_input(input);
     let (start_row, start_col) = find_start(&grid);
 
-    // Count distinct splitter positions encountered
     let mut splitter_positions = HashSet::new();
     let mut visited = HashSet::new();
     count_splitters(
@@ -46,10 +46,8 @@ fn count_splitters(
     let c = start_c;
 
     loop {
-        // Move down
         r += 1;
 
-        // Check bounds
         if r < 0 || r >= grid.len() as i32 {
             return;
         }
@@ -61,7 +59,6 @@ fn count_splitters(
             return;
         }
 
-        // Check visited to prevent infinite loops
         if visited.contains(&(r, c)) {
             return;
         }
@@ -70,7 +67,6 @@ fn count_splitters(
         let ch = line.chars().nth(c as usize).unwrap_or('.');
 
         if ch == '^' {
-            // Found a splitter - record it and branch
             splitter_positions.insert((r, c));
             count_splitters(grid, r, c - 1, visited, splitter_positions);
             count_splitters(grid, r, c + 1, visited, splitter_positions);
@@ -83,25 +79,20 @@ pub fn part_two(input: &str) -> u64 {
     let grid = parse_input(input);
     let (start_row, start_col) = find_start(&grid);
 
-    let mut timeline_count = 0u64;
-    let mut visited = HashSet::new();
-    count_timelines(
-        &grid,
-        start_row as i32,
-        start_col as i32,
-        &mut visited,
-        &mut timeline_count,
-    );
-    timeline_count
+    let mut memo = HashMap::new();
+    count_timelines_memo(&grid, start_row as i32, start_col as i32, &mut memo)
 }
 
-fn count_timelines(
+fn count_timelines_memo(
     grid: &[&str],
     start_r: i32,
     start_c: i32,
-    visited: &mut HashSet<(i32, i32)>,
-    timeline_count: &mut u64,
-) {
+    memo: &mut HashMap<(i32, i32), u64>,
+) -> u64 {
+    if let Some(&count) = memo.get(&(start_r, start_c)) {
+        return count;
+    }
+
     let mut r = start_r;
     let c = start_c;
     let mut local_visited = HashSet::new();
@@ -110,30 +101,32 @@ fn count_timelines(
         r += 1;
 
         if r < 0 || r >= grid.len() as i32 {
-            *timeline_count += 1;
-            return;
+            memo.insert((start_r, start_c), 1);
+            return 1;
         }
 
         let r_usize = r as usize;
         let line = grid[r_usize];
 
         if c < 0 || c as usize >= line.len() {
-            *timeline_count += 1;
-            return;
+            memo.insert((start_r, start_c), 1);
+            return 1;
         }
 
         if local_visited.contains(&(r, c)) {
-            *timeline_count += 1;
-            return;
+            memo.insert((start_r, start_c), 1);
+            return 1;
         }
         local_visited.insert((r, c));
 
         let ch = line.chars().nth(c as usize).unwrap_or('.');
 
         if ch == '^' {
-            count_timelines(grid, r, c - 1, visited, timeline_count);
-            count_timelines(grid, r, c + 1, visited, timeline_count);
-            return;
+            let left_count = count_timelines_memo(grid, r, c - 1, memo);
+            let right_count = count_timelines_memo(grid, r, c + 1, memo);
+            let total = left_count + right_count;
+            memo.insert((start_r, start_c), total);
+            return total;
         }
     }
 }
