@@ -20,6 +20,7 @@ fn main() {
         // Day 0 is a template reference, not part of 2025 event
         // puzzle!(day00, "Template Reference"),
         puzzle!(day01, "Secret Entrance"),
+        puzzle!(day02, "Gift Shop"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
