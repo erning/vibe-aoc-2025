@@ -46,7 +46,10 @@ fn count_neighbors(grid: &[Vec<char>], row: usize, col: usize) -> usize {
     for (dr, dc) in directions {
         let nr = row as isize + dr;
         let nc = col as isize + dc;
-        if nr >= 0 && nr < rows && nc >= 0 && nc < cols
+        if nr >= 0
+            && nr < rows
+            && nc >= 0
+            && nc < cols
             && grid[nr as usize][nc as usize] == '@'
         {
             count += 1;
