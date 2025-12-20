@@ -21,11 +21,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
+This is a Rust implementation of [Advent of Code 2025](https://adventofcode.com/2025/) puzzles, featuring solutions with consistent architecture and testing patterns.
 
-This is a template project for [Advent of Code xxxx](https://adventofcode.com/xxxx/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
+**Note**: AoC 2025 features only 12 daily puzzles (Day 1-12). Day 0 serves as a template reference.
 
-- Puzzle page: `https://adventofcode.com/xxxx/day/${N}`
-- Input download: `https://adventofcode.com/xxxx/day/${N}/input` (requires authentication)
+- Puzzle page: `https://adventofcode.com/2025/day/${N}`
+- Input download: `https://adventofcode.com/2025/day/${N}/input` (requires authentication)
 
 ## Architecture
 - **Entry Point**: `src/main.rs` - Main executable with option to run all days or specific ones

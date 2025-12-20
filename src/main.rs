@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::time::SystemTime;
 
 fn main() {
+    #[allow(unused_macros)]
     macro_rules! puzzle {
         ($mod:ident, $title:expr) => {
             (
@@ -16,8 +17,8 @@ fn main() {
     type SolverFn = fn(&str) -> Box<dyn Display>;
 
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
-        // register puzzle here
-        puzzle!(day01, "Historian Hysteria"),
+        // Day 0 is a template reference, not part of 2025 event
+        // puzzle!(day00, "Template Reference"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {

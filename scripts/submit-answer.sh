@@ -6,7 +6,7 @@
 
 set -e
 
-YEAR=xxxx
+YEAR=2025
 
 if [ $# -lt 3 ]; then
   echo "Usage: $0 <day> <part> <answer>"
