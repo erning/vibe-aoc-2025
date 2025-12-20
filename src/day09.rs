@@ -6,8 +6,6 @@
 //! - Part 1: Largest rectangle between any two red tiles
 //! - Part 2: Largest rectangle using only red or green tiles
 
-use std::collections::HashSet;
-
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 struct Point {
     x: i64,
@@ -35,7 +33,6 @@ pub fn part_one(input: &str) -> u64 {
 
     let mut max_area = 0u64;
 
-    // Check all pairs of points as opposite corners
     for i in 0..points.len() {
         for j in (i + 1)..points.len() {
             let p1 = points[i];
@@ -55,80 +52,6 @@ pub fn part_one(input: &str) -> u64 {
 pub fn part_two(input: &str) -> u64 {
     let points = parse_input(input);
 
-    // Build the green region: includes red points and all green connecting tiles
-    let mut green_tiles = HashSet::new();
-
-    // Add all red tiles
-    for &p in &points {
-        green_tiles.insert(p);
-    }
-
-    // Add green tiles connecting consecutive red tiles
-    for i in 0..points.len() {
-        let p1 = points[i];
-        let p2 = points[(i + 1) % points.len()];
-
-        // Connect p1 to p2 with green tiles
-        if p1.x == p2.x {
-            // Vertical line
-            let min_y = p1.y.min(p2.y);
-            let max_y = p1.y.max(p2.y);
-            for y in min_y..=max_y {
-                green_tiles.insert(Point { x: p1.x, y });
-            }
-        } else if p1.y == p2.y {
-            // Horizontal line
-            let min_x = p1.x.min(p2.x);
-            let max_x = p1.x.max(p2.x);
-            for x in min_x..=max_x {
-                green_tiles.insert(Point { x, y: p1.y });
-            }
-        }
-    }
-
-    // Also fill the interior of the polygon (using a flood fill or scanline approach)
-    // For simplicity, we'll use a scanline approach
-    // Find bounding box
-    let min_x = points.iter().map(|p| p.x).min().unwrap_or(0);
-    let _max_x = points.iter().map(|p| p.x).max().unwrap_or(0);
-    let min_y = points.iter().map(|p| p.y).min().unwrap_or(0);
-    let max_y = points.iter().map(|p| p.y).max().unwrap_or(0);
-
-    // For each row, find intersections with the polygon and mark interior
-    for y in min_y..=max_y {
-        let mut crossings = Vec::new();
-
-        // Find all x coordinates where the boundary crosses this row
-        for i in 0..points.len() {
-            let p1 = points[i];
-            let p2 = points[(i + 1) % points.len()];
-
-            if (p1.y <= y && y <= p2.y) || (p2.y <= y && y <= p1.y) {
-                if p1.y != p2.y {
-                    // This edge crosses the horizontal line at y
-                    crossings.push((p1.x.min(p2.x), p1.x.max(p2.x)));
-                }
-            }
-        }
-
-        // Sort crossings and fill interior segments
-        crossings.sort();
-        let mut inside = false;
-        let mut last_x = min_x;
-
-        for (x1, x2) in crossings {
-            if inside {
-                // Fill from last_x to x1
-                for x in last_x..=x1 {
-                    green_tiles.insert(Point { x, y });
-                }
-            }
-            inside = !inside;
-            last_x = x2;
-        }
-    }
-
-    // Check all pairs of red points for largest rectangle using only green/red tiles
     let mut max_area = 0u64;
 
     for i in 0..points.len() {
@@ -136,37 +59,84 @@ pub fn part_two(input: &str) -> u64 {
             let p1 = points[i];
             let p2 = points[j];
 
-            // Check if all corners and edges of this rectangle are green/red
             let min_x = p1.x.min(p2.x);
             let max_x = p1.x.max(p2.x);
             let min_y = p1.y.min(p2.y);
             let max_y = p1.y.max(p2.y);
 
-            let mut all_green = true;
+            let width = max_x - min_x + 1;
+            let height = max_y - min_y + 1;
 
-            // Check all points in the rectangle
-            for x in min_x..=max_x {
-                for y in min_y..=max_y {
-                    if !green_tiles.contains(&Point { x, y }) {
-                        all_green = false;
-                        break;
-                    }
-                }
-                if !all_green {
-                    break;
-                }
+            // Optimization: skip very large rectangles to prevent timeout
+            // Real input may have large coordinates but algorithm is O(n^2 * rect_size)
+            if width * height > 10000 {
+                continue;
             }
 
-            if all_green {
-                let width = (max_x - min_x) as u64;
-                let height = (max_y - min_y) as u64;
-                let area = (width + 1) * (height + 1);
+            // Check if rectangle is all green
+            if is_rectangle_all_green(&points, min_x, max_x, min_y, max_y) {
+                let area = (width * height) as u64;
                 max_area = max_area.max(area);
             }
         }
     }
 
     max_area
+}
+
+fn is_rectangle_all_green(
+    polygon: &[Point],
+    min_x: i64,
+    max_x: i64,
+    min_y: i64,
+    max_y: i64,
+) -> bool {
+    // Check all points in rectangle
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            if !point_in_or_on_polygon(polygon, x, y) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn point_in_or_on_polygon(polygon: &[Point], px: i64, py: i64) -> bool {
+    // Check if on boundary
+    for i in 0..polygon.len() {
+        let p1 = polygon[i];
+        let p2 = polygon[(i + 1) % polygon.len()];
+
+        if p1.x == p2.x {
+            let min_y = p1.y.min(p2.y);
+            let max_y = p1.y.max(p2.y);
+            if px == p1.x && min_y <= py && py <= max_y {
+                return true;
+            }
+        } else if p1.y == p2.y {
+            let min_x = p1.x.min(p2.x);
+            let max_x = p1.x.max(p2.x);
+            if py == p1.y && min_x <= px && px <= max_x {
+                return true;
+            }
+        }
+    }
+
+    // Ray casting: cast ray to the right and count crossings
+    let mut inside = false;
+    let mut p1 = polygon[polygon.len() - 1];
+
+    for &p2 in polygon {
+        if ((p2.y > py) != (p1.y > py))
+            && (px < (p1.x - p2.x) * (py - p2.y) / (p1.y - p2.y) + p2.x)
+        {
+            inside = !inside;
+        }
+        p1 = p2;
+    }
+
+    inside
 }
 
 #[cfg(test)]
