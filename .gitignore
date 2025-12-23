@@ -1,3 +1,4 @@
 /target
 /.claude/settings.local.json
 .aoc-session
+minimax-m2.1/
