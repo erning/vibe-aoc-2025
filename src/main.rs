@@ -20,6 +20,7 @@ fn main() {
         // day00 is a template/reference module, not an active puzzle
         // puzzle!(day00, "Template/Reference"),
         puzzle!(day01, "Secret Entrance"),
+        puzzle!(day02, "Gift Shop"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {
