@@ -7,9 +7,11 @@
 //!
 //! ## Solution Approach
 //!
-//! **Part 1 Strategy**: BFS for small button counts, greedy fallback.
-//! **Part 2 Strategy**: Linear Diophantine optimization. Use constraint
-//! propagation with row-by-row elimination for efficiency.
+//! **Part 1 Strategy**: BFS for XOR operations in GF(2).
+//! **Part 2 Strategy**: Gaussian elimination over rationals to reduce system,
+//! then search over free variables for optimal integer solution.
+
+use std::collections::VecDeque;
 
 #[derive(Debug, Clone)]
 struct Machine {
@@ -86,8 +88,6 @@ fn solve_lights(machine: &Machine) -> usize {
 }
 
 fn bfs_solve_lights(machine: &Machine) -> usize {
-    use std::collections::VecDeque;
-
     let start = vec![false; machine.target_lights.len()];
     let target = &machine.target_lights;
     let num_buttons = machine.buttons.len();
@@ -215,6 +215,217 @@ fn solve_joltage(machine: &Machine) -> i64 {
         return 0;
     }
 
+    // Build augmented matrix [A|b] as rational numbers (numerator, denominator)
+    let mut aug: Vec<Vec<(i64, i64)>> = vec![vec![(0, 1); n + 1]; m];
+
+    for i in 0..m {
+        for (j, button) in machine.buttons.iter().enumerate() {
+            if button.contains(&i) {
+                aug[i][j] = (1, 1);
+            }
+        }
+        aug[i][n] = (machine.target_joltage[i], 1);
+    }
+
+    // Gaussian elimination to find pivot columns
+    let n_counters = m;
+    let n_buttons = n;
+    let mut pivot_cols = Vec::new();
+    let mut row = 0;
+
+    for col in 0..n_buttons {
+        // Find pivot
+        let mut pivot_row = None;
+
+        for r in row..n_counters {
+            if aug[r][col].0 != 0 {
+                pivot_row = Some(r);
+                break;
+            }
+        }
+
+        if let Some(pr) = pivot_row {
+            aug.swap(row, pr);
+            pivot_cols.push(col);
+
+            // Eliminate column
+            let pivot_entry = aug[row][col];
+
+            for r in 0..n_counters {
+                if r != row && aug[r][col].0 != 0 {
+                    let (a_num, a_den) = pivot_entry;
+                    let (b_num, b_den) = aug[r][col];
+                    let factor_num = b_num * a_den;
+                    let factor_den = b_den * a_num;
+
+                    for c in 0..=n_buttons {
+                        let (row_num, row_den) = aug[row][c];
+                        let (r_num, r_den) = aug[r][c];
+                        let new_num =
+                            r_num * r_den * row_den * factor_den
+                                - row_num * r_den * factor_num * r_den;
+                        let new_den = r_den * r_den * row_den * factor_den;
+                        let g = gcd(new_num.abs(), new_den.abs());
+                        if g > 0 {
+                            aug[r][c] = (new_num / g, new_den / g);
+                        }
+                    }
+                }
+            }
+
+            row += 1;
+        }
+    }
+
+    // Free variables
+    let free_cols: Vec<usize> =
+        (0..n_buttons).filter(|c| !pivot_cols.contains(c)).collect();
+
+    let max_val = *machine.target_joltage.iter().max().unwrap_or(&0);
+
+    // If no free variables, unique solution
+    if free_cols.is_empty() {
+        let mut solution = vec![0i64; n_buttons];
+
+        for (r, &col) in pivot_cols.iter().enumerate() {
+            let (num, den) = aug[r][n_buttons];
+            let (pivot_num, pivot_den) = aug[r][col];
+            let val_num = num * pivot_den;
+            let val_den = den * pivot_num;
+
+            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0 {
+                return greedy_solve(machine);
+            }
+
+            solution[col] = val_num / val_den;
+        }
+
+        return solution.iter().sum();
+    }
+
+    // Search over free variables
+    let mut best = i64::MAX;
+    let mut free_vals = Vec::new();
+
+    search_free(
+        0,
+        &free_cols,
+        &pivot_cols,
+        &aug,
+        n_buttons,
+        &mut free_vals,
+        max_val,
+        &mut best,
+        machine,
+    );
+
+    if best == i64::MAX {
+        greedy_solve(machine)
+    } else {
+        best
+    }
+}
+
+fn search_free(
+    idx: usize,
+    free_cols: &[usize],
+    pivot_cols: &[usize],
+    aug: &[Vec<(i64, i64)>],
+    n_buttons: usize,
+    free_vals: &mut Vec<i64>,
+    max_val: i64,
+    best: &mut i64,
+    machine: &Machine,
+) {
+    if idx == free_cols.len() {
+        // Compute pivot variable values
+        let mut solution = vec![0i64; n_buttons];
+
+        for (i, &fc) in free_cols.iter().enumerate() {
+            solution[fc] = free_vals[i];
+        }
+
+        for (r, &pc) in pivot_cols.iter().enumerate() {
+            let (b_num, b_den) = aug[r][n_buttons];
+            let mut rhs_num = b_num;
+            let mut rhs_den = b_den;
+
+            for &fc in free_cols {
+                let (coef_num, coef_den) = aug[r][fc];
+                let fc_idx = free_cols.iter().position(|&x| x == fc).unwrap();
+                let sub_num = coef_num * free_vals[fc_idx];
+                let sub_den = coef_den;
+                rhs_num = rhs_num * sub_den - sub_num * rhs_den;
+                rhs_den *= sub_den;
+                let g = gcd(rhs_num.abs(), rhs_den.abs());
+                if g > 0 {
+                    rhs_num /= g;
+                    rhs_den /= g;
+                }
+            }
+
+            let (pivot_num, pivot_den) = aug[r][pc];
+            let val_num = rhs_num * pivot_den;
+            let val_den = rhs_den * pivot_num;
+
+            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0 {
+                return;
+            }
+
+            solution[pc] = val_num / val_den;
+        }
+
+        let cost: i64 = solution.iter().sum();
+
+        if cost < *best {
+            *best = cost;
+        }
+
+        return;
+    }
+
+    let current_cost: i64 = free_vals.iter().sum();
+
+    if current_cost >= *best {
+        return;
+    }
+
+    for v in 0..=max_val {
+        free_vals.push(v);
+
+        search_free(
+            idx + 1,
+            free_cols,
+            pivot_cols,
+            aug,
+            n_buttons,
+            free_vals,
+            max_val,
+            best,
+            machine,
+        );
+
+        free_vals.pop();
+    }
+}
+
+fn greedy_solve(machine: &Machine) -> i64 {
+    let m = machine.target_joltage.len();
+    let n = machine.buttons.len();
+
+    let mut x = vec![0i64; n];
+    let mut current = vec![0i64; m];
+
+    let mut upper_bounds = vec![0i64; n];
+
+    for j in 0..n {
+        for i in 0..m {
+            if machine.buttons[j].contains(&i) {
+                upper_bounds[j] = upper_bounds[j].max(machine.target_joltage[i]);
+            }
+        }
+    }
+
     let a: Vec<Vec<i64>> = (0..m)
         .map(|i| {
             (0..n)
@@ -230,219 +441,6 @@ fn solve_joltage(machine: &Machine) -> i64 {
         .collect();
 
     let b = &machine.target_joltage;
-
-    ilp_min_sum(&a, b)
-}
-
-fn ilp_min_sum(a: &Vec<Vec<i64>>, b: &Vec<i64>) -> i64 {
-    let m = b.len();
-    let n = a[0].len();
-
-    // Check for simple cases
-    if n == 0 {
-        return 0;
-    }
-
-    // Calculate bounds
-    let mut upper_bounds = vec![0i64; n];
-
-    for j in 0..n {
-        for i in 0..m {
-            if a[i][j] > 0 {
-                upper_bounds[j] = upper_bounds[j].max(b[i]);
-            }
-        }
-    }
-
-    // Use row-by-row Gaussian elimination with backtracking
-    solve_with_elimination(a, b, &upper_bounds)
-}
-
-fn solve_with_elimination(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> i64 {
-    let m = b.len();
-    let n = a[0].len();
-
-    // Find row with minimum number of 1s (most constrained)
-    let mut min_row = 0;
-    let mut min_count = n + 1;
-
-    for i in 0..m {
-        let count = (0..n).filter(|&j| a[i][j] > 0).count();
-
-        if count > 0 && count < min_count {
-            min_count = count;
-            min_row = i;
-        }
-    }
-
-    if min_count == 1 {
-        // Only one button affects this counter
-        let j = match (0..n).find(|&col| a[min_row][col] > 0) {
-            Some(j) => j,
-            None => {
-                // Shouldn't happen if min_count == 1, but handle gracefully
-                return greedy_simple(a, b, upper_bounds);
-            }
-        };
-
-        // This button must be pressed exactly b[min_row] times
-        let x_j = b[min_row];
-
-        if x_j > upper_bounds[j] {
-            // Infeasible
-            return i64::MAX;
-        }
-
-        // Create reduced problem
-        let reduced_b: Vec<i64> = (0..m)
-            .map(|i| {
-                if i == min_row {
-                    0
-                } else {
-                    b[i] - a[i][j] * x_j
-                }
-            })
-            .collect();
-
-        // Check if any values became negative
-        if reduced_b.iter().any(|&v| v < 0) {
-            return i64::MAX;
-        }
-
-        // Check if reduced problem is satisfied
-        let all_zero = reduced_b.iter().all(|&v| v == 0);
-
-        if all_zero {
-            return x_j;
-        }
-
-        // Recursively solve reduced problem
-        let reduced_a: Vec<Vec<i64>> = (0..m)
-            .map(|i| {
-                if i == min_row {
-                    vec![0; n - 1]
-                } else {
-                    let mut row = Vec::with_capacity(n - 1);
-
-                    for col in 0..n {
-                        if col != j {
-                            row.push(a[i][col]);
-                        }
-                    }
-
-                    row
-                }
-            })
-            .collect();
-
-        let reduced_upper: Vec<i64> = (0..n)
-            .filter(|&col| col != j)
-            .map(|col| upper_bounds[col])
-            .collect();
-
-        let reduced_result = solve_with_elimination(&reduced_a, &reduced_b, &reduced_upper);
-
-        if reduced_result == i64::MAX {
-            return i64::MAX;
-        }
-
-        return x_j + reduced_result;
-    }
-
-    // No row with single 1, use branch and bound on most constrained row
-    let best_branch = branch_on_constrained(a, b, upper_bounds, min_row);
-
-    best_branch
-}
-
-fn branch_on_constrained(
-    a: &Vec<Vec<i64>>,
-    b: &Vec<i64>,
-    upper_bounds: &Vec<i64>,
-    row: usize,
-) -> i64 {
-    let n = a[0].len();
-
-    // Find columns with 1s in this row
-    let cols: Vec<usize> = (0..n).filter(|&j| a[row][j] > 0).collect();
-
-    if cols.is_empty() {
-        if b[row] == 0 {
-            // This row is satisfied, solve remaining
-            let reduced_b: Vec<i64> = b.iter().enumerate()
-                .filter(|&(i, _)| i != row)
-                .map(|(_, &v)| v)
-                .collect();
-
-            if reduced_b.is_empty() {
-                return 0;
-            }
-
-            let reduced_a: Vec<Vec<i64>> = a.iter().enumerate()
-                .filter(|&(i, _)| i != row)
-                .map(|(_, r)| r.clone())
-                .collect();
-
-            return solve_with_elimination(&reduced_a, &reduced_b, upper_bounds);
-        } else {
-            return i64::MAX; // Infeasible
-        }
-    }
-
-    let mut best = i64::MAX;
-
-    // Try values for the first column in this row
-    let col = cols[0];
-
-    // Calculate max possible value for this column
-    let max_val = upper_bounds[col].min(b[row]);
-
-    for v in 0..=max_val {
-        // Check if this value is compatible with row constraint
-        if a[row][col] * v > b[row] {
-            break;
-        }
-
-        // Create reduced problem
-        let reduced_b: Vec<i64> = (0..b.len())
-            .map(|i| b[i] - a[i][col] * v)
-            .collect();
-
-        if reduced_b.iter().any(|&val| val < 0) {
-            continue;
-        }
-
-        let reduced_a: Vec<Vec<i64>> = (0..a.len())
-            .map(|i| {
-                (0..n).filter(|&j| j != col).map(|j| a[i][j]).collect()
-            })
-            .collect();
-
-        let reduced_upper: Vec<i64> = (0..n)
-            .filter(|&j| j != col)
-            .map(|j| upper_bounds[j])
-            .collect();
-
-        let result = solve_with_elimination(&reduced_a, &reduced_b, &reduced_upper);
-
-        if result != i64::MAX {
-            let total = v + result;
-
-            if total < best {
-                best = total;
-            }
-        }
-    }
-
-    best
-}
-
-fn greedy_simple(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> i64 {
-    let n = a[0].len();
-    let m = b.len();
-
-    let mut x = vec![0i64; n];
-    let mut current = vec![0i64; m];
 
     for _ in 0..100000 {
         if current == *b {
@@ -496,6 +494,14 @@ fn greedy_simple(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> i6
     }
 
     x.iter().sum()
+}
+
+fn gcd(a: i64, b: i64) -> i64 {
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
+    }
 }
 
 pub fn part_one(input: &str) -> usize {
