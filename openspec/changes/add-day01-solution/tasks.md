@@ -17,7 +17,7 @@
 - [x] 2.9 Submit Part 1 answer via `./scripts/submit-answer.sh 1 1 <answer>` (if unknown)
 - [x] 2.10 Verify answer is correct; modify implementation if needed
 - [x] 2.11 Run `cargo clippy` and `cargo fmt` to ensure code quality
-- [ ] 2.12 Commit Part 1 implementation
+- [x] 2.12 Commit Part 1 implementation
 
 ## 3. Implement Part Two
 - [x] 3.1 Fetch Part 2 description (available after Part 1 is completed)
@@ -28,7 +28,7 @@
 - [x] 3.6 Submit Part 2 answer via `./scripts/submit-answer.sh 1 2 <answer>` (if unknown)
 - [x] 3.7 Verify answer is correct; modify implementation if needed
 - [x] 3.8 Run `cargo clippy` and `cargo fmt` to ensure code quality
-- [ ] 3.9 Commit Part 2 implementation
+- [x] 3.9 Commit Part 2 implementation
 
 ## 4. Final Validation
 - [x] 4.1 Run `cargo test` to verify all tests pass
