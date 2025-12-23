@@ -45,7 +45,10 @@ fn count_adjacent(grid: &[Vec<char>], r: usize, c: usize) -> usize {
             }
             let nr = r as i32 + dr;
             let nc = c as i32 + dc;
-            if nr >= 0 && nr < h as i32 && nc >= 0 && nc < w as i32
+            if nr >= 0
+                && nr < h as i32
+                && nc >= 0
+                && nc < w as i32
                 && grid[nr as usize][nc as usize] == '@'
             {
                 count += 1;
