@@ -1,4 +1,4 @@
-# aoc-xxxx-in-rust
+# aoc-2025-in-rust
 
 ```text
 $ cargo run --release --
