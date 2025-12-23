@@ -8,9 +8,8 @@
 //! ## Solution Approach
 //!
 //! **Part 1 Strategy**: BFS for small button counts, greedy fallback.
-//! **Part 2 Strategy**: Linear Diophantine optimization - minimize sum(x) subject
-//! to Ax = b, x ≥ 0. Using DFS with aggressive pruning for small problems,
-//! constraint-based greedy for larger ones.
+//! **Part 2 Strategy**: Linear Diophantine optimization. Use constraint
+//! propagation with row-by-row elimination for efficiency.
 
 #[derive(Debug, Clone)]
 struct Machine {
@@ -232,12 +231,19 @@ fn solve_joltage(machine: &Machine) -> i64 {
 
     let b = &machine.target_joltage;
 
-    // For small problems, use exact DFS
-    if n <= 12 && b.iter().sum::<i64>() <= 200 {
-        return exact_dfs(&a, b);
+    ilp_min_sum(&a, b)
+}
+
+fn ilp_min_sum(a: &Vec<Vec<i64>>, b: &Vec<i64>) -> i64 {
+    let m = b.len();
+    let n = a[0].len();
+
+    // Check for simple cases
+    if n == 0 {
+        return 0;
     }
 
-    // For larger problems, use greedy solution
+    // Calculate bounds
     let mut upper_bounds = vec![0i64; n];
 
     for j in 0..n {
@@ -248,206 +254,190 @@ fn solve_joltage(machine: &Machine) -> i64 {
         }
     }
 
-    greedy_init(&a, b, &upper_bounds).iter().sum()
+    // Use row-by-row Gaussian elimination with backtracking
+    solve_with_elimination(a, b, &upper_bounds)
 }
 
-fn exact_dfs(a: &Vec<Vec<i64>>, b: &Vec<i64>) -> i64 {
+fn solve_with_elimination(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> i64 {
+    let m = b.len();
     let n = a[0].len();
 
-    let mut upper_bounds = vec![0i64; n];
+    // Find row with minimum number of 1s (most constrained)
+    let mut min_row = 0;
+    let mut min_count = n + 1;
 
-    for j in 0..n {
-        for i in 0..b.len() {
-            if a[i][j] > 0 {
-                upper_bounds[j] = upper_bounds[j].max(b[i]);
+    for i in 0..m {
+        let count = (0..n).filter(|&j| a[i][j] > 0).count();
+
+        if count > 0 && count < min_count {
+            min_count = count;
+            min_row = i;
+        }
+    }
+
+    if min_count == 1 {
+        // Only one button affects this counter
+        let j = match (0..n).find(|&col| a[min_row][col] > 0) {
+            Some(j) => j,
+            None => {
+                // Shouldn't happen if min_count == 1, but handle gracefully
+                return greedy_simple(a, b, upper_bounds);
             }
+        };
+
+        // This button must be pressed exactly b[min_row] times
+        let x_j = b[min_row];
+
+        if x_j > upper_bounds[j] {
+            // Infeasible
+            return i64::MAX;
+        }
+
+        // Create reduced problem
+        let reduced_b: Vec<i64> = (0..m)
+            .map(|i| {
+                if i == min_row {
+                    0
+                } else {
+                    b[i] - a[i][j] * x_j
+                }
+            })
+            .collect();
+
+        // Check if any values became negative
+        if reduced_b.iter().any(|&v| v < 0) {
+            return i64::MAX;
+        }
+
+        // Check if reduced problem is satisfied
+        let all_zero = reduced_b.iter().all(|&v| v == 0);
+
+        if all_zero {
+            return x_j;
+        }
+
+        // Recursively solve reduced problem
+        let reduced_a: Vec<Vec<i64>> = (0..m)
+            .map(|i| {
+                if i == min_row {
+                    vec![0; n - 1]
+                } else {
+                    let mut row = Vec::with_capacity(n - 1);
+
+                    for col in 0..n {
+                        if col != j {
+                            row.push(a[i][col]);
+                        }
+                    }
+
+                    row
+                }
+            })
+            .collect();
+
+        let reduced_upper: Vec<i64> = (0..n)
+            .filter(|&col| col != j)
+            .map(|col| upper_bounds[col])
+            .collect();
+
+        let reduced_result = solve_with_elimination(&reduced_a, &reduced_b, &reduced_upper);
+
+        if reduced_result == i64::MAX {
+            return i64::MAX;
+        }
+
+        return x_j + reduced_result;
+    }
+
+    // No row with single 1, use branch and bound on most constrained row
+    let best_branch = branch_on_constrained(a, b, upper_bounds, min_row);
+
+    best_branch
+}
+
+fn branch_on_constrained(
+    a: &Vec<Vec<i64>>,
+    b: &Vec<i64>,
+    upper_bounds: &Vec<i64>,
+    row: usize,
+) -> i64 {
+    let n = a[0].len();
+
+    // Find columns with 1s in this row
+    let cols: Vec<usize> = (0..n).filter(|&j| a[row][j] > 0).collect();
+
+    if cols.is_empty() {
+        if b[row] == 0 {
+            // This row is satisfied, solve remaining
+            let reduced_b: Vec<i64> = b.iter().enumerate()
+                .filter(|&(i, _)| i != row)
+                .map(|(_, &v)| v)
+                .collect();
+
+            if reduced_b.is_empty() {
+                return 0;
+            }
+
+            let reduced_a: Vec<Vec<i64>> = a.iter().enumerate()
+                .filter(|&(i, _)| i != row)
+                .map(|(_, r)| r.clone())
+                .collect();
+
+            return solve_with_elimination(&reduced_a, &reduced_b, upper_bounds);
+        } else {
+            return i64::MAX; // Infeasible
         }
     }
 
     let mut best = i64::MAX;
-    let mut current = vec![0i64; n];
-    let mut current_vals = vec![0i64; b.len()];
 
-    dfs_search(a, b, &upper_bounds, 0, 0, &mut best, &mut current, &mut current_vals);
+    // Try values for the first column in this row
+    let col = cols[0];
+
+    // Calculate max possible value for this column
+    let max_val = upper_bounds[col].min(b[row]);
+
+    for v in 0..=max_val {
+        // Check if this value is compatible with row constraint
+        if a[row][col] * v > b[row] {
+            break;
+        }
+
+        // Create reduced problem
+        let reduced_b: Vec<i64> = (0..b.len())
+            .map(|i| b[i] - a[i][col] * v)
+            .collect();
+
+        if reduced_b.iter().any(|&val| val < 0) {
+            continue;
+        }
+
+        let reduced_a: Vec<Vec<i64>> = (0..a.len())
+            .map(|i| {
+                (0..n).filter(|&j| j != col).map(|j| a[i][j]).collect()
+            })
+            .collect();
+
+        let reduced_upper: Vec<i64> = (0..n)
+            .filter(|&j| j != col)
+            .map(|j| upper_bounds[j])
+            .collect();
+
+        let result = solve_with_elimination(&reduced_a, &reduced_b, &reduced_upper);
+
+        if result != i64::MAX {
+            let total = v + result;
+
+            if total < best {
+                best = total;
+            }
+        }
+    }
 
     best
 }
 
-fn dfs_search(
-    a: &Vec<Vec<i64>>,
-    b: &Vec<i64>,
-    upper_bounds: &Vec<i64>,
-    idx: usize,
-    current_sum: i64,
-    best: &mut i64,
-    current: &mut Vec<i64>,
-    current_vals: &mut Vec<i64>,
-) {
-    let n = a[0].len();
-    let m = b.len();
-
-    if current_sum >= *best {
-        return;
-    }
-
-    for i in 0..m {
-        if current_vals[i] > b[i] {
-            return;
-        }
-
-        let max_remaining: i64 = (idx..n).map(|j| a[i][j] * upper_bounds[j]).sum();
-
-        if current_vals[i] + max_remaining < b[i] {
-            return;
-        }
-    }
-
-    if idx == n {
-        for i in 0..m {
-            if current_vals[i] != b[i] {
-                return;
-            }
-        }
-
-        *best = current_sum;
-        return;
-    }
-
-    let mut upper = upper_bounds[idx];
-
-    for i in 0..m {
-        if a[i][idx] == 0 {
-            continue;
-        }
-
-        let remaining = b[i] - current_vals[i];
-
-        if remaining >= 0 && a[i][idx] > 0 {
-            upper = upper.min(remaining / a[i][idx]);
-        }
-    }
-
-    for v in 0..=upper {
-        for i in 0..m {
-            current_vals[i] += a[i][idx] * v;
-        }
-        current[idx] = v;
-
-        dfs_search(
-            a,
-            b,
-            upper_bounds,
-            idx + 1,
-            current_sum + v,
-            best,
-            current,
-            current_vals,
-        );
-
-        for i in 0..m {
-            current_vals[i] -= a[i][idx] * v;
-        }
-        current[idx] = 0;
-    }
-}
-
-fn constraint_solve(a: &Vec<Vec<i64>>, b: &Vec<i64>) -> i64 {
-    let n = a[0].len();
-    let m = b.len();
-
-    let mut upper_bounds = vec![0i64; n];
-
-    for j in 0..n {
-        for i in 0..m {
-            if a[i][j] > 0 {
-                upper_bounds[j] = upper_bounds[j].max(b[i]);
-            }
-        }
-    }
-
-    // Initialize with greedy
-    let mut x = greedy_init(a, b, &upper_bounds);
-
-    // Local search: try to improve by adjusting variables
-    let mut improved = true;
-    let mut iterations = 0;
-
-    while improved && iterations < 1000 {
-        iterations += 1;
-        improved = false;
-
-        for j in 0..n {
-            // Try decreasing x[j] and compensating with others
-            if x[j] == 0 {
-                continue;
-            }
-
-            let old_val = x[j];
-            x[j] = 0;
-
-            // Recompute current state
-            let mut current = vec![0i64; m];
-
-            for k in 0..n {
-                for i in 0..m {
-                    current[i] += a[i][k] * x[k];
-                }
-            }
-
-            // Try to fix using other variables
-            let mut fixed = false;
-
-            for k in 0..n {
-                if k == j {
-                    continue;
-                }
-
-                while x[k] < upper_bounds[k] {
-                    // Check if pressing k helps
-                    let mut would_help = true;
-
-                    for i in 0..m {
-                        if a[i][k] > 0 && current[i] >= b[i] {
-                            would_help = false;
-                            break;
-                        }
-                    }
-
-                    if !would_help {
-                        break;
-                    }
-
-                    // Press k
-                    for i in 0..m {
-                        current[i] += a[i][k];
-                    }
-                    x[k] += 1;
-
-                    // Check if solved
-                    if current == *b {
-                        fixed = true;
-                        break;
-                    }
-                }
-
-                if fixed {
-                    break;
-                }
-            }
-
-            if fixed && x.iter().sum::<i64>() < old_val {
-                improved = true;
-            } else if !fixed {
-                // Revert
-                x[j] = old_val;
-            }
-        }
-    }
-
-    x.iter().sum()
-}
-
-fn greedy_init(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> Vec<i64> {
+fn greedy_simple(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> i64 {
     let n = a[0].len();
     let m = b.len();
 
@@ -456,7 +446,7 @@ fn greedy_init(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> Vec<
 
     for _ in 0..100000 {
         if current == *b {
-            return x;
+            return x.iter().sum();
         }
 
         let mut best_j: Option<usize> = None;
@@ -505,7 +495,7 @@ fn greedy_init(a: &Vec<Vec<i64>>, b: &Vec<i64>, upper_bounds: &Vec<i64>) -> Vec<
         }
     }
 
-    x
+    x.iter().sum()
 }
 
 pub fn part_one(input: &str) -> usize {
