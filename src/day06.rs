@@ -80,8 +80,8 @@ fn find_separators(grid: &[Vec<char>], num_data_rows: usize) -> Vec<usize> {
 
     for col in 0..max_cols {
         let mut is_separator = true;
-        for row_idx in 0..num_data_rows {
-            if col < grid[row_idx].len() && grid[row_idx][col] != ' ' {
+        for row in grid.iter().take(num_data_rows) {
+            if col < row.len() && row[col] != ' ' {
                 is_separator = false;
                 break;
             }
@@ -172,8 +172,8 @@ pub fn part_one(input: &str) -> u128 {
 
     // Parse all data rows into numbers
     let mut all_numbers: Vec<Vec<NumberAt>> = Vec::new();
-    for row_idx in 0..num_data_rows {
-        all_numbers.push(parse_row(&grid[row_idx]));
+    for row in grid.iter().take(num_data_rows) {
+        all_numbers.push(parse_row(row));
     }
 
     // Assign each number to the problem whose range contains it
@@ -228,10 +228,8 @@ pub fn part_two(input: &str) -> u128 {
     for col in 0..max_cols {
         // Check if this column has any digits
         let mut has_digits = false;
-        for row_idx in 0..num_data_rows {
-            if col < grid[row_idx].len()
-                && grid[row_idx][col].is_ascii_digit()
-            {
+        for row in grid.iter().take(num_data_rows) {
+            if col < row.len() && row[col].is_ascii_digit() {
                 has_digits = true;
                 break;
             }
@@ -253,11 +251,9 @@ pub fn part_two(input: &str) -> u128 {
         if let Some(idx) = problem_idx {
             // Read this column top-to-bottom to form a number
             let mut num_str = String::new();
-            for row_idx in 0..num_data_rows {
-                if col < grid[row_idx].len()
-                    && grid[row_idx][col].is_ascii_digit()
-                {
-                    num_str.push(grid[row_idx][col]);
+            for row in grid.iter().take(num_data_rows) {
+                if col < row.len() && row[col].is_ascii_digit() {
+                    num_str.push(row[col]);
                 }
             }
 
