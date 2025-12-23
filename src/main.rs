@@ -19,6 +19,7 @@ fn main() {
         // register puzzle here
         puzzle!(day01, "Secret Entrance"),
         puzzle!(day02, "Gift Shop"),
+        puzzle!(day03, "Lobby"),
         // puzzle!(day00, "Template"),  // Uncomment and update when solving day
     ];
 
