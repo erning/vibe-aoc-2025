@@ -177,7 +177,8 @@ pub fn part_one(input: &str) -> u128 {
     }
 
     // Assign each number to the problem whose range contains it
-    let mut problem_numbers: Vec<Vec<u128>> = vec![Vec::new(); problems.len()];
+    let mut problem_numbers: Vec<Vec<u128>> =
+        vec![Vec::new(); problems.len()];
 
     for row_numbers in &all_numbers {
         for num in row_numbers {
