@@ -52,9 +52,10 @@ fn parse_input(input: &str) -> Vec<Machine> {
             let joltage_end = line.find('}').unwrap();
             let joltage_str = &line[joltage_start + 1..joltage_end];
 
-            let target_joltage: Vec<i64> =
-                joltage_str.split(',').map(|s| s.trim().parse().unwrap())
-                    .collect();
+            let target_joltage: Vec<i64> = joltage_str
+                .split(',')
+                .map(|s| s.trim().parse().unwrap())
+                .collect();
 
             Machine {
                 target_lights,
@@ -171,7 +172,8 @@ fn iterative_solve_lights(machine: &Machine) -> usize {
                 let mut affects_wrong = false;
 
                 for &light_idx in button {
-                    if light_idx < state.len() && state[light_idx] != target[light_idx]
+                    if light_idx < state.len()
+                        && state[light_idx] != target[light_idx]
                     {
                         affects_wrong = true;
                         break;
@@ -261,9 +263,8 @@ fn solve_joltage(machine: &Machine) -> i64 {
                     for c in 0..=n_buttons {
                         let (row_num, row_den) = aug[row][c];
                         let (r_num, r_den) = aug[r][c];
-                        let new_num =
-                            r_num * r_den * row_den * factor_den
-                                - row_num * r_den * factor_num * r_den;
+                        let new_num = r_num * r_den * row_den * factor_den
+                            - row_num * r_den * factor_num * r_den;
                         let new_den = r_den * r_den * row_den * factor_den;
                         let g = gcd(new_num.abs(), new_den.abs());
                         if g > 0 {
@@ -293,7 +294,8 @@ fn solve_joltage(machine: &Machine) -> i64 {
             let val_num = num * pivot_den;
             let val_den = den * pivot_num;
 
-            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0 {
+            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0
+            {
                 return greedy_solve(machine);
             }
 
@@ -368,7 +370,8 @@ fn search_free(
             let val_num = rhs_num * pivot_den;
             let val_den = rhs_den * pivot_num;
 
-            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0 {
+            if val_den == 0 || val_num % val_den != 0 || val_num / val_den < 0
+            {
                 return;
             }
 
@@ -421,7 +424,8 @@ fn greedy_solve(machine: &Machine) -> i64 {
     for j in 0..n {
         for i in 0..m {
             if machine.buttons[j].contains(&i) {
-                upper_bounds[j] = upper_bounds[j].max(machine.target_joltage[i]);
+                upper_bounds[j] =
+                    upper_bounds[j].max(machine.target_joltage[i]);
             }
         }
     }
