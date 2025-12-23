@@ -17,7 +17,8 @@ fn main() {
 
     let puzzles: Vec<(&str, SolverFn, SolverFn)> = vec![
         // register puzzle here
-        puzzle!(day01, "Historian Hysteria"),
+        // day00 is a template/reference module, not an active puzzle
+        // puzzle!(day00, "Template/Reference"),
     ];
 
     let filename = match env::args().find(|a| a == "--example") {

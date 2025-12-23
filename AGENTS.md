@@ -22,10 +22,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## Project Overview
 
 
-This is a template project for [Advent of Code xxxx](https://adventofcode.com/xxxx/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
+This is a template project for [Advent of Code 2025](https://adventofcode.com/2025/) implementation in Rust, featuring solutions with consistent architecture and testing patterns.
 
-- Puzzle page: `https://adventofcode.com/xxxx/day/${N}`
-- Input download: `https://adventofcode.com/xxxx/day/${N}/input` (requires authentication)
+**Note:** AoC 2025 has 12 puzzles (Day 1-12), unlike previous years which had 25 days.
+
+- Puzzle page: `https://adventofcode.com/2025/day/${N}`
+- Input download: `https://adventofcode.com/2025/day/${N}/input` (requires authentication)
 
 ## Architecture
 - **Entry Point**: `src/main.rs` - Main executable with option to run all days or specific ones
@@ -123,7 +125,7 @@ To get your session cookie:
 ```
 
 ## Extension Workflow
-1. Create `src/dayXX.rs` following established patterns
+1. Copy `src/day00.rs` to `src/dayXX.rs` as a starting template
 2. Add module declaration to `src/lib.rs`
 3. Register in `src/main.rs` puzzles array
 4. Add corresponding input and test files
