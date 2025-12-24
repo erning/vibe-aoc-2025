@@ -7,18 +7,17 @@ This repository contains multiple branches exploring different AI models solving
 | Branch | Days Completed | Total Commits | Approach | Status |
 |--------|----------------|---------------|----------|--------|
 | **[droid-opus-4.5](../../tree/droid-opus-4.5)** | 1-12 (ALL) | 14 | Direct implementation | ✅ Complete |
-| **[openspec-opus-4.5](../../tree/openspec-opus-4.5)** | 1-12 (ALL) | 17 | OpenSpec framework (archived) | ✅ Complete |
-| **[openspec-glm-4.7](../../tree/openspec-glm-4.7)** | 1-12 (ALL) | 20 | OpenSpec with iteration | ✅ Complete |
-| **[openspec-haiku-4.5](../../tree/openspec-haiku-4.5)** | 1-12 (partial) | 33 | OpenSpec with extensive fixes | ⚠️ Partial (Day 10+ needs optimization) |
-| **[openspec-minimax-m2](../../tree/openspec-minimax-m2)** | 1-8 | 16 | OpenSpec + .opencode | 🔄 In Progress |
-| **[openspec-sonnet-4.5](../../tree/openspec-sonnet-4.5)** | 1-8 | 13 | OpenSpec framework | 🔄 In Progress |
-| **[openspec-glm-4.6](../../tree/openspec-glm-4.6)** | 1-5 | 11 | OpenSpec framework | 🔄 In Progress |
-| **[openspec-minimax-m2.1](../../tree/openspec-minimax-m2.1)** | 1-5 | 10 | OpenSpec + .opencode | 🔄 In Progress |
-| **[openspec-kimi-for-coding](../../tree/openspec-kimi-for-coding)** | 1-5 | 13 | OpenSpec + .opencode | 🔄 In Progress |
-| **[openspec-qwen](../../tree/openspec-qwen)** | 1-5 | 9 | OpenSpec framework | 🔄 In Progress |
-| **[openspec-amp-free](../../tree/openspec-amp-free)** | 1-2 | 8 | OpenSpec framework | 🔄 Early Stage |
-| **[openspec-gemini](../../tree/openspec-gemini)** | 1-2 | 7 | OpenSpec + Gemini CLI | 🔄 Early Stage |
-| **[openspec](../../tree/openspec)** | 0 | 5 | Framework only | 📋 Setup |
+| **[opus-4.5](../../tree/openspec-opus-4.5)** | 1-12 (ALL) | 17 | OpenSpec framework (archived) | ✅ Complete |
+| **[glm-4.7](../../tree/openspec-glm-4.7)** | 1-12 (ALL) | 20 | OpenSpec with iteration | ✅ Complete |
+| **[haiku-4.5](../../tree/openspec-haiku-4.5)** | 1-12 (partial) | 33 | OpenSpec with extensive fixes | ⚠️ Partial (Day 10+ needs optimization) |
+| **[minimax-m2](../../tree/openspec-minimax-m2)** | 1-8 | 16 | OpenSpec + .opencode | 🔄 In Progress |
+| **[sonnet-4.5](../../tree/openspec-sonnet-4.5)** | 1-8 | 13 | OpenSpec framework | 🔄 In Progress |
+| **[glm-4.6](../../tree/openspec-glm-4.6)** | 1-5 | 11 | OpenSpec framework | 🔄 In Progress |
+| **[minimax-m2.1](../../tree/openspec-minimax-m2.1)** | 1-5 | 10 | OpenSpec + .opencode | 🔄 In Progress |
+| **[kimi-for-coding](../../tree/openspec-kimi-for-coding)** | 1-5 | 13 | OpenSpec + .opencode | 🔄 In Progress |
+| **[qwen](../../tree/openspec-qwen)** | 1-5 | 9 | OpenSpec framework | 🔄 In Progress |
+| **[amp-free](../../tree/openspec-amp-free)** | 1-2 | 8 | OpenSpec framework | 🔄 Early Stage |
+| **[gemini](../../tree/openspec-gemini)** | 1-2 | 7 | OpenSpec + Gemini CLI | 🔄 Early Stage |
 
 ## Detailed Branch Analysis
 
@@ -260,17 +259,6 @@ feat(dayXX): implement part one of day XX solution
 feat: Add Gemini CLI openspec command configurations
 ```
 
----
-
-### 13. openspec (Framework Only)
-- **Completion**: 0 days
-- **Commits**: 5 total
-- **Approach**: Framework initialization without solutions
-- **Notable**:
-  - Contains openspec change proposals for AoC 2025
-  - Project-specific details in project.md
-  - Base framework for other branches
-
 ## Key Observations
 
 ### Completion Rate Ranking (by days completed)
@@ -296,9 +284,6 @@ feat: Add Gemini CLI openspec command configurations
 **Tier 5 - Early Stage (Days 1-2)**:
 11. openspec-amp-free 🔄 (8 commits)
 12. openspec-gemini 🔄 (7 commits)
-
-**Tier 6 - Framework Only**:
-13. openspec 📋 (5 commits)
 
 ### Approach Differences
 
